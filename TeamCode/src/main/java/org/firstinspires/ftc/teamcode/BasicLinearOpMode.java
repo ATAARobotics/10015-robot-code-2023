@@ -133,10 +133,10 @@ public class BasicLinearOpMode extends LinearOpMode {
             // - This uses basic math to combine motions and is easier to drive straight.
             double drive = -gamepad1.left_stick_y;
             double turn  =  gamepad1.right_stick_x;
-            double elevator_up = gamepad1.left_trigger;
-            double elevator_down = -gamepad1.right_trigger;
-            boolean claw = gamepad1.cross;
-            boolean claw_release = gamepad1.square;
+            double elevator_up = gamepad2.left_trigger;
+            double elevator_down = -gamepad2.right_trigger;
+            boolean claw = gamepad2.cross;
+            boolean claw_release = gamepad2.square;
             boolean moveForward = gamepad1.circle;
             boolean rotate = gamepad1.triangle;
 
