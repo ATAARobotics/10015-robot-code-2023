@@ -138,20 +138,20 @@ public class AutonomousOpMode extends LinearOpMode {
             sleep(250);
             read_cone();
             sleep(250);
-            moveDistance(-6);
+            moveDistance(-7);
             //closeClaw();
             //openClaw();
             //sleep(500);
             if (colorVal == "Red"){
                 rotateCW(90);
                 sleep(250);
-                moveDistance(-40);
+                moveDistance(-30);
             }
             else if (colorVal == "Blue"){
                 //moveDistance(12);
                 rotateCCW(90);
                 sleep(250);
-                moveDistance(-40);
+                moveDistance(-30);
             } else {
                 moveDistance(-18);
                 closeClaw();
