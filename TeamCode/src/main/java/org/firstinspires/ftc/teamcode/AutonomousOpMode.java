@@ -107,7 +107,7 @@ public class AutonomousOpMode extends LinearOpMode {
         clawServoL.setPosition(1.0);
         clawServoR.setPosition(0.0);
 
-        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "imu");
+        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "colorSensor");
 
         int relativeLayoutId = hardwareMap.appContext.getResources().getIdentifier("RelativeLayout", "id", hardwareMap.appContext.getPackageName());
         final View relativeLayout = ((Activity) hardwareMap.appContext).findViewById(relativeLayoutId);

@@ -109,8 +109,8 @@ public class BasicLinearOpMode extends LinearOpMode {
         clawServoL.scaleRange(0.0,1.0);
         clawServoR.scaleRange( 0.0, 1.0);
 
-        clawServoL.setPosition(1.0);
-        clawServoR.setPosition(0.0);
+        //clawServoL.setPosition(1.0);
+        //clawServoR.setPosition(0.0);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
