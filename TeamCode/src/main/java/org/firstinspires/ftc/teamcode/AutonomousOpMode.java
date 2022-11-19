@@ -243,8 +243,9 @@ public class AutonomousOpMode extends LinearOpMode {
     }
 
     public void rotateCW(int degrees){
-        long initialL = leftDrive.getCurrentPosition()+degrees;
-        long initialR = rightDrive.getCurrentPosition()-degrees;
+        // NOTE degrees and real world rotation need massaging
+        long initialL = leftDrive.getCurrentPosition()+(degrees*6);
+        long initialR = rightDrive.getCurrentPosition()-(degrees*6);
 
         leftDrive.setTargetPosition((int) initialL);
         rightDrive.setTargetPosition((int) initialR);
@@ -262,8 +263,9 @@ public class AutonomousOpMode extends LinearOpMode {
     }
     public void rotateCCW(int degrees){
         // rotate left
-        long initialL = leftDrive.getCurrentPosition()-degrees;
-        long initialR = rightDrive.getCurrentPosition()+degrees;
+        // NOTE degrees and real world rotation need massaging
+        long initialL = leftDrive.getCurrentPosition()-(degrees*6);
+        long initialR = rightDrive.getCurrentPosition()+(degrees*6);
 
         leftDrive.setTargetPosition((int) initialL);
         rightDrive.setTargetPosition((int) initialR);
