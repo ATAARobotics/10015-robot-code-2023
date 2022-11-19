@@ -104,8 +104,8 @@ public class AutonomousOpMode extends LinearOpMode {
         clawServoR.setDirection(Servo.Direction.FORWARD);
         clawServoL.scaleRange(0.0,1.0);
         clawServoR.scaleRange( 0.0, 1.0);
-        clawServoL.setPosition(1.0);
-        clawServoR.setPosition(0.0);
+        //clawServoL.setPosition(1.0);
+        //clawServoR.setPosition(0.0);
 
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "colorSensor");
 
