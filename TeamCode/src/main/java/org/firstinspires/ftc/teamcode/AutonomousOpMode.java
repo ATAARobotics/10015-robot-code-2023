@@ -131,8 +131,8 @@ public class AutonomousOpMode extends LinearOpMode {
             double rightPower;
             double elevator_power;
 
-            closeClaw();
-            openClaw();
+            //closeClaw();
+            //openClaw();
             // turn right 90
             moveDistance(-18);
             sleep(250);
@@ -292,5 +292,7 @@ public class AutonomousOpMode extends LinearOpMode {
                 colorVal ="Blue";
             }
         }
+        telemetry.addData("Color", "name (%d)" + colorVal);
+
     }
 }
