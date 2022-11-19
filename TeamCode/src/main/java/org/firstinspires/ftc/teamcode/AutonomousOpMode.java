@@ -1,5 +1,5 @@
 /* Copyright (c) 100015
- *
+ * AutoOpMode v0001
  */
 
 package org.firstinspires.ftc.teamcode;
@@ -40,7 +40,7 @@ public class AutonomousOpMode extends LinearOpMode {
     private long      e1, e2, e3, e4;
     private double    v1, v2, v3, v4;
     private double claw_value_left, claw_value_right;
-    public String colorVal = "None";
+    public String colorVal = "Green";
 
     public final int twelveInches = 528;
     public final int sixInches = 264;
@@ -118,6 +118,7 @@ public class AutonomousOpMode extends LinearOpMode {
         // hue, the second element (1) will contain the saturation, and the third element (2) will
         // contain the value. See http://web.archive.org/web/20190311170843/https://infohost.nmt.edu/tcc/help/pubs/colortheory/web/hsv.html
         // for an explanation of HSV color.
+        //final float[] hsvValues = new float[3];
 
         // Wait for the game to start (driver presses PLAY)
         elevator_level(elevator_min);
@@ -131,22 +132,25 @@ public class AutonomousOpMode extends LinearOpMode {
             double rightPower;
             double elevator_power;
 
-            //closeClaw();
-            //openClaw();
+
             // turn right 90
             moveDistance(-18);
             sleep(250);
             read_cone();
             sleep(250);
             moveDistance(-6);
+            //closeClaw();
+            //openClaw();
             //sleep(500);
             if (colorVal == "Red"){
                 rotateCW(90);
+                sleep(250);
                 moveDistance(-40);
             }
             else if (colorVal == "Blue"){
                 //moveDistance(12);
                 rotateCCW(90);
+                sleep(250);
                 moveDistance(-40);
             } else {
                 moveDistance(-18);
@@ -283,7 +287,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
         float max = Math.max(colors.red, colors.blue);
         float maxA = Math.max(max, colors.green);
-        if (maxA >0.002f){
+        if (maxA >0.001f){
             if (colors.red == maxA){
                 colorVal ="Red";
             } else if (colors.green == maxA) {
