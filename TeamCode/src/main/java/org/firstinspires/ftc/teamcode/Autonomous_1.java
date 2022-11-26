@@ -43,7 +43,6 @@ public class Autonomous_1 extends LinearOpMode {
             if (set + 1350 < currentTimeMillis()) {
                 robotui.frm.setPower(0);
                 robotui.flm.setPower(0);
-                //hoiuij
             }
         }
     }
