@@ -120,6 +120,10 @@ public class AutonomousOpMode extends LinearOpMode {
         // for an explanation of HSV color.
         //final float[] hsvValues = new float[3];
 
+        openClaw();
+        sleep(2000);
+        closeClaw();
+
         // Wait for the game to start (driver presses PLAY)
         elevator_level(elevator_min);
         waitForStart();
