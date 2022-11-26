@@ -44,14 +44,6 @@ public class Autonomous_1 extends LinearOpMode {
                 robotui.frm.setPower(0);
                 robotui.flm.setPower(0);
             }
-
-            /*if (setO + 3000 < currentTimeMillis()) {
-                telemetry.addData("State", "STOP");
-                telemetry.update();
-                robotui.frm.setPower(0f);
-                robotui.flm.setPower(0f);
-                robotui.elevatorm.setTargetPosition(0);
-            }*/
         }
     }
 }
