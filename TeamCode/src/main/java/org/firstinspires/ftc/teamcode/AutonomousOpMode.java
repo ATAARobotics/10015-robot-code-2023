@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -40,7 +41,7 @@ public class AutonomousOpMode extends LinearOpMode {
     private long      e1, e2, e3, e4;
     private double    v1, v2, v3, v4;
     private double claw_value_left, claw_value_right;
-    public String colorVal = "Green";
+    public String colorVal = "White";
 
     public final int twelveInches = 528;
     public final int sixInches = 264;
@@ -60,9 +61,9 @@ public class AutonomousOpMode extends LinearOpMode {
     static final double     robotWidth = 6.63;
 
     static final int    elevator_min = 0;
-    static final int    elevator_first = 10;
-    static final int    elevator_second = 20;
-    static final int    elevator_third = 30;
+    static final int    elevator_first = 750;
+    static final int    elevator_second = 1200;
+    static final int    elevator_third = 1575;
 
 
     @Override
@@ -70,7 +71,7 @@ public class AutonomousOpMode extends LinearOpMode {
         telemetry.addData("Status", "Initialized Autonomous");
         telemetry.update();
 
-        // dummy
+        // Adding in additional 4th colour state to differentiate between green and default
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
@@ -79,7 +80,7 @@ public class AutonomousOpMode extends LinearOpMode {
         rightDrive = hardwareMap.get(DcMotorEx.class, "rightDrive");
         elevatorDrive = hardwareMap.get(DcMotorEx.class, "elevatorDrive");
         elevatorDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        elevatorDrive.setDirection(DcMotor.Direction.FORWARD);
+        elevatorDrive.setDirection(DcMotor.Direction.REVERSE);
         elevatorDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //leftDrive.setTargetPositionTolerance();
@@ -127,7 +128,7 @@ public class AutonomousOpMode extends LinearOpMode {
         closeClaw();
 
         // Wait for the game to start (driver presses PLAY)
-        elevator_level(elevator_min);
+        set_elevator_level(elevator_min);
         waitForStart();
         runtime.reset();
 
@@ -145,23 +146,62 @@ public class AutonomousOpMode extends LinearOpMode {
             read_cone();
             sleep(250);
             moveDistance(-7);
-            //closeClaw();
-            //openClaw();
-            //sleep(500);
+
             if (colorVal == "Red"){
                 rotateCW(90);
                 sleep(250);
-                moveDistance(-25);
+                moveDistance(-24);
+                sleep(100);
+                rotateCW(130);
+                set_elevator_level(elevator_third);
+                moveDistance(10.5);
+                sleep(100);
+                openClaw();
+                moveDistance(-9);
+                set_elevator_level(elevator_min);
+                rotateCW(45);
             }
             else if (colorVal == "Blue"){
                 //moveDistance(12);
                 rotateCCW(90);
                 sleep(250);
-                moveDistance(-25);
-            } else {
-                moveDistance(-18);
-                closeClaw();
+                moveDistance(-24);
+                sleep(100);
+                rotateCCW(50);
+                set_elevator_level(elevator_first);
+                moveDistance(11.5);
+                sleep(100);
+                openClaw();
+                moveDistance(-8.5);
+                set_elevator_level(elevator_min);
+                rotateCW(50);
             }
+            else  {
+                // green is default
+                moveDistance(-24);
+                sleep(100);
+
+                rotateCCW(135);
+                set_elevator_level(elevator_third);
+                moveDistance(11);
+                sleep(100);
+                openClaw();
+                moveDistance(-9);
+                set_elevator_level(elevator_min);
+                rotateCW(45);
+
+            }
+/*
+            set_elevator_level(elevator_min);
+            sleep(500);
+            set_elevator_level(elevator_first);
+            sleep(500);
+            set_elevator_level(elevator_second);
+            sleep(500);
+            set_elevator_level(elevator_third);
+            sleep(200);
+            set_elevator_level(elevator_min);
+            */
 
             // long is e %d
             // double is v %f
@@ -203,10 +243,11 @@ public class AutonomousOpMode extends LinearOpMode {
         sleep(250);
     }
 
-    public void elevator_level (int level) {
+    public void set_elevator_level (int level) {
+        // set the level of the elevator to level
         // set elevator to one foot (-253)
         int currentPos = elevatorDrive.getCurrentPosition();
-        telemetry.addData("elevaotr pos", currentPos);
+        telemetry.addData("start elevator pos", currentPos);
         telemetry.update();
 
         elevatorDrive.setTargetPosition((int) level); // -253
@@ -214,11 +255,11 @@ public class AutonomousOpMode extends LinearOpMode {
         elevatorDrive.setVelocity(800);
         while (elevatorDrive.isBusy()){
             sleep(100);
-            int currentPoser = elevatorDrive.getCurrentPosition();
-            telemetry.addData("elevaotr pos", currentPoser);
-            telemetry.update();
         }
-        sleep(250);
+        int currentPoser = elevatorDrive.getCurrentPosition();
+        telemetry.addData("elevator pos", currentPoser);
+        telemetry.update();
+        sleep(100);
     }
 
     public void moveDistance(double distance){
@@ -300,9 +341,10 @@ public class AutonomousOpMode extends LinearOpMode {
                 colorVal ="Red";
             } else if (colors.green == maxA) {
                 colorVal ="Green";
-            } else {
+            } else if (colors.blue == maxA) {
                 colorVal ="Blue";
-            }
+            } //else if (colors.red == colors.blue == colors.green){
+                //colorVal ="White";
         }
         telemetry.addData("Color", "name (%d)" + colorVal);
 

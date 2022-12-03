@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -148,7 +149,7 @@ public class BasicLinearOpMode extends LinearOpMode {
 
             leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
             rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
-            elevator_power = Range.clip(elevator_down+elevator_up, -1.0, 1.0);
+            //elevator_power = Range.clip(elevator_down+elevator_up, -1.0, 1.0);
 
             // Tank Mode uses one stick to control each wheel.
             // - This requires no math, but it is hard to drive forward slowly and keep straight.
@@ -159,10 +160,18 @@ public class BasicLinearOpMode extends LinearOpMode {
             leftDrive.setPower(leftPower/2);
             rightDrive.setPower(rightPower/2);
 
-            if (elevator_power / 0.5 >0.0){
+            if (elevator_up>0){
                 elevatorDrive.setDirection(DcMotor.Direction.REVERSE);
-                elevator_power = elevator_power/2;
+                elevator_power = elevator_up/2;
             }
+            if (elevator_down>0){
+                elevatorDrive.setDirection(DcMotor.Direction.FORWARD);
+                elevator_power = elevator_up/2;
+            }
+            //if (elevator_power / 0.5 >0.0){
+            //    elevatorDrive.setDirection(DcMotor.Direction.REVERSE);
+            //    elevator_power = elevator_power/2;
+            //}
             elevatorDrive.setPower(elevator_power / 0.5);
 
             // claw on
