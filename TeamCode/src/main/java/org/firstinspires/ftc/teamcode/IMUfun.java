@@ -94,7 +94,7 @@ public class IMUfun extends LinearOpMode {
         while (opModeIsActive())
         {
             lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            telemetry.addData("imu ", lastAngles.toString());
+            telemetry.addData("the IMU ", lastAngles.toString());
             telemetry.update();
         }
     }
