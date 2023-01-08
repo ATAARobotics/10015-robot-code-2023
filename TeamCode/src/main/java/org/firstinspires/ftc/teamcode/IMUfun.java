@@ -3,13 +3,17 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -18,36 +22,18 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-@TeleOp(name="IMUfun", group="TeleOp")
 
+// this is just a dumb wrapper
+import com.arcrobotics.ftclib.hardware.RevIMU;
+import com.arcrobotics.ftclib.drivebase.HDrive;
+import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
+
+@TeleOp(name="kiwi", group="TeleOp")
 public class IMUfun extends LinearOpMode {
 //    private DemoRobotInterface robotui = null;
-    public float axisX;
-    public float axisY;
-
-    public float boostOff = 0.2f;
-    public float lowBoost = 0.4f;
-    public float highBoost = 1f;
-
-    public int lowPos = 1700;
-    public int medPos = 2600;
-    public int highPos = 6600;
-
-    public int limitUP = 9000;
-    public int limitDN = 0;
-
-    public float speed = 0.75f;
-
-    public boolean toggle = false;
-    public boolean bool = toggle;
-    public boolean val = false;
-
-    BNO055IMU               imu;
-    Orientation             lastAngles = new Orientation();
-    double                  globalAngle, power = .30, correction;
-
-
-
+  //  RevIMU               imu;
+    BNO055IMU imu;
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -72,6 +58,21 @@ public class IMUfun extends LinearOpMode {
         telemetry.addData("Mode", "calibrating...");
         telemetry.update();
 
+        // initialize our motor + servo variables from the hardwareMap
+    //    Motor motor_left = hardwareMap.get(DcMotorEx.class, "left");
+      //  Motor motor_right = hardwareMap.get(DcMotorEx.class, "right");
+        //Motor motor_slide = hardwareMap.get(DcMotorEx.class, "slide");
+        Motor motor_left = new Motor(hardwareMap, "left");
+        Motor motor_right = new Motor(hardwareMap, "right");
+        Motor motor_slide = new Motor(hardwareMap, "slide");
+        //motor_elevator = hardwareMap.get(DcMotorEx.class, "elevator");
+
+        //servo_claw_left = hardwareMap.get(Servo.class, "clawLeft");
+        //servo_claw_right = hardwareMap.get(Servo.class, "clawRight");
+
+        HDrive kiwi = new HDrive(motor_left, motor_right, motor_slide);
+        GamepadEx driverOp = new GamepadEx(gamepad1);
+
         // make sure the imu gyro is calibrated before continuing.
         while (!isStopRequested() && !imu.isGyroCalibrated())
         {
@@ -93,9 +94,10 @@ public class IMUfun extends LinearOpMode {
 
         while (opModeIsActive())
         {
-            lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            telemetry.addData("the IMU ", lastAngles.toString());
+            //lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            //telemetry.addData("the IMU ", lastAngles.toString());
             telemetry.update();
+            kiwi.driveRobotCentric(driverOp.getLeftX(), driverOp.getLeftY(), driverOp.getRightY());
         }
     }
 }
