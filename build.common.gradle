@@ -47,9 +47,6 @@ android {
         }
     }
 
-    aaptOptions {
-        noCompress "tflite"
-    }
 
     defaultConfig {
         signingConfig signingConfigs.debug
@@ -80,7 +77,7 @@ android {
         def vCode = Integer.parseInt(matcher.group(1))
         //
         def vNamePattern = Pattern.compile("versionName=\"(.*)\"")
-        matcher = vNamePattern.matcher(manifestText);
+        matcher = vNamePattern.matcher(manifestText)
         matcher.find()
         def vName = matcher.group(1)
         //
