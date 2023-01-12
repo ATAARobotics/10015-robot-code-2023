@@ -3,6 +3,9 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 
@@ -13,75 +16,96 @@ import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 
 
-@TeleOp(name="kiwi", group="TeleOp")
+@TeleOp(name="Kiwi: OpMode", group="Opmode")
 public class KiwiDrive extends OpMode {
-    BNO055IMU imu;
+    // Declare OpMode motors.
+    // private final ElapsedTime runtime = new ElapsedTime();
+    private DcMotorEx motor_left = null;
+    private DcMotorEx motor_right = null;
+    private DcMotorEx motor_slide = null;
 
+    private DcMotorEx motor_elevator = null;
+    //private NormalizedColorSensor colorSensor = null;
+
+    // declare servos
+    private Servo servo_claw_left = null;
+    private Servo servo_claw_right = null;
+
+    // time-tracking
+    private double last_time = 0.0;
 
     @Override
-    public void runOpMode() throws InterruptedException {
-
-        telemetry.addData("Mode", "starting...");
-        telemetry.update();
-
-
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-
-        parameters.mode                = BNO055IMU.SensorMode.IMU;
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.loggingEnabled      = false;
-
-        // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
-        // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
-        // and named "imu".
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-
-        imu.initialize(parameters);
-
-        telemetry.addData("Mode", "calibrating...");
+    public void init() {
+        telemetry.addData("status", "startup");
         telemetry.update();
 
         // initialize our motor + servo variables from the hardwareMap
-    //    Motor motor_left = hardwareMap.get(DcMotorEx.class, "left");
-      //  Motor motor_right = hardwareMap.get(DcMotorEx.class, "right");
-        //Motor motor_slide = hardwareMap.get(DcMotorEx.class, "slide");
-        Motor motor_left = new Motor(hardwareMap, "left");
-        Motor motor_right = new Motor(hardwareMap, "right");
-        Motor motor_slide = new Motor(hardwareMap, "slide");
+        motor_left = hardwareMap.get(DcMotorEx.class, "left");
+        motor_right = hardwareMap.get(DcMotorEx.class, "right");
+        motor_slide = hardwareMap.get(DcMotorEx.class, "slide");
         //motor_elevator = hardwareMap.get(DcMotorEx.class, "elevator");
 
         //servo_claw_left = hardwareMap.get(Servo.class, "clawLeft");
         //servo_claw_right = hardwareMap.get(Servo.class, "clawRight");
 
-        HDrive kiwi = new HDrive(motor_left, motor_right, motor_slide);
-        GamepadEx driverOp = new GamepadEx(gamepad1);
+        // motor-specific setups
 
-        // make sure the imu gyro is calibrated before continuing.
-        while (!isStopRequested() && !imu.isGyroCalibrated())
-        {
-            sleep(50);
-            idle();
-        }
+        // elevator setup
+        // https://ftctechnh.github.io/ftc_app/doc/javadoc/com/qualcomm/robotcore/hardware/DcMotor.ZeroPowerBehavior.html
+        //motor_elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //motor_elevator.setDirection(DcMotor.Direction.FORWARD);
 
-        telemetry.addData("Mode", "waiting for start");
-        telemetry.addData("imu calib status", imu.getCalibrationStatus().toString());
+        // claw servo setup
+        //servo_claw_left.setDirection(Servo.Direction.FORWARD);
+        //servo_claw_right.setDirection(Servo.Direction.FORWARD);
+        // XXX what do these mean?
+        //servo_claw_left.scaleRange(0.0, 1.0);
+        //servo_claw_right.scaleRange( 0.0, 1.0);
+
+        telemetry.addData("status", "initialized");
         telemetry.update();
+    }
 
+    @Override
+    public void init_loop() {
+        // Executed repeatedly after a user presses INIT but before a
+        // user presses Play (▶) on the Driver Station
+    }
 
-        // wait for start button.
+    @Override
+    public void start() {
+        // Executed once immediately after a user presses Play (▶) on
+        // the Driver Station
 
-        waitForStart();
+        // XXX reset variables, etc here
+    }
 
-        telemetry.addData("Mode", "running");
+    @Override
+    public void loop() {
+        // Executed repeatedly after a user presses Play (▶) but
+        // before a user presses Stop (◼) on the Driver Station
+
+        double diff = time - last_time;
+        last_time = time;
+
+        telemetry.addData("time", time);
+        telemetry.addData("diff", diff);
+        telemetry.addData(
+            "stick",
+            String.format(
+                "stick: left (%.2f, %.2f) right (%.2f, %.2f)",
+                gamepad1.left_stick_x,
+                gamepad1.left_stick_y,
+                gamepad1.right_stick_x,
+                gamepad1.right_stick_y
+            )
+        );
         telemetry.update();
+    }
 
-        while (opModeIsActive())
-        {
-            //lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            //telemetry.addData("the IMU ", lastAngles.toString());
-            telemetry.update();
-            kiwi.driveRobotCentric(driverOp.getLeftX(), driverOp.getLeftY(), driverOp.getRightY());
-        }
+    @Override
+    public void stop() {
+        // Executed once immediately after a user presses Stop (◼) on
+        // the Driver Station
     }
 }
