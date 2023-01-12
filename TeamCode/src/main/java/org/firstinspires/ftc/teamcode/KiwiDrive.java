@@ -2,15 +2,17 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.IMU;
+
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 
 // this is just a dumb wrapper
-import com.arcrobotics.ftclib.hardware.RevIMU;
+//import com.arcrobotics.ftclib.hardware.RevIMU;
 import com.arcrobotics.ftclib.drivebase.HDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
@@ -19,13 +21,18 @@ import com.arcrobotics.ftclib.gamepad.GamepadEx;
 @TeleOp(name="Kiwi: OpMode", group="Opmode")
 public class KiwiDrive extends OpMode {
     // Declare OpMode motors.
-    // private final ElapsedTime runtime = new ElapsedTime();
-    private DcMotorEx motor_left = null;
-    private DcMotorEx motor_right = null;
-    private DcMotorEx motor_slide = null;
+    private Motor motor_left = null;
+    private Motor motor_right = null;
+    private Motor motor_slide = null;
 
-    private DcMotorEx motor_elevator = null;
+    private Motor motor_elevator = null;
     //private NormalizedColorSensor colorSensor = null;
+
+    // Inertial Measurement Unit
+    private IMU imu = null;
+
+    // Holonomic Drive
+    private HDrive drive = null;
 
     // declare servos
     private Servo servo_claw_left = null;
@@ -39,14 +46,41 @@ public class KiwiDrive extends OpMode {
         telemetry.addData("status", "startup");
         telemetry.update();
 
-        // initialize our motor + servo variables from the hardwareMap
-        motor_left = hardwareMap.get(DcMotorEx.class, "left");
-        motor_right = hardwareMap.get(DcMotorEx.class, "right");
-        motor_slide = hardwareMap.get(DcMotorEx.class, "slide");
+        // initialize IMU
+        IMU.Parameters imu_params = new IMU.Parameters(
+            new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
+            )
+        );
+        imu = hardwareMap.get(IMU.class, "imu");
+        imu.initialize(imu_params);
+
+        // initialize motors
+        motor_left = new Motor(hardwareMap, "left");
+        motor_right = new Motor(hardwareMap, "right");
+        motor_slide = new Motor(hardwareMap, "slide");
+
+        // motor power levels
+        motor_left.setRunMode(Motor.RunMode.RawPower);
+        motor_right.setRunMode(Motor.RunMode.RawPower);
+        motor_slide.setRunMode(Motor.RunMode.RawPower);
+        motor_left.setInverted(false);
+        motor_right.setInverted(false);
+        motor_slide.setInverted(false);
+
+
         //motor_elevator = hardwareMap.get(DcMotorEx.class, "elevator");
 
         //servo_claw_left = hardwareMap.get(Servo.class, "clawLeft");
         //servo_claw_right = hardwareMap.get(Servo.class, "clawRight");
+
+        // initialize holonomic drive
+        // first three are the motors, next three numbers are 'angles' for the motors
+        drive = new HDrive(
+            motor_left, motor_right, motor_slide,
+            60, 120, 270
+        );
 
         // motor-specific setups
 
@@ -101,6 +135,9 @@ public class KiwiDrive extends OpMode {
             )
         );
         telemetry.update();
+
+        // simple at first: left-strick forward/back + turn
+        drive.driveRobotCentric(0.0, gamepad1.left_stick_y, gamepad1.right_stick_x);
     }
 
     @Override
