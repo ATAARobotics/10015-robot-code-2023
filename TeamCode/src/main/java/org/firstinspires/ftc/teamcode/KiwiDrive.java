@@ -7,6 +7,9 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -40,6 +43,9 @@ public class KiwiDrive extends OpMode {
 
     // time-tracking
     private double last_time = 0.0;
+
+    // navigation variables
+    private double heading = 0.0;
 
     @Override
     public void init() {
@@ -76,11 +82,23 @@ public class KiwiDrive extends OpMode {
         //servo_claw_right = hardwareMap.get(Servo.class, "clawRight");
 
         // initialize holonomic drive
-        // first three are the motors, next three numbers are 'angles' for the motors
+
+        // first three arguments are the motors themselves, the next
+        // three numbers are 'angles' for the motors -- this is their
+        // mounting angle, relative to "0" being "forward"
+        // (counter-clockwise, because "right handed coordinates" and
+        // +z is up)
+
+        // NOTE NOTE!
+        //    0. The angle "0" is straight ahead
+        //    1. Angles are "right-hand coordinate" so "20" means "20 degress counter-clockwise"
+        //    2. The motors ARE NOT IN counter-clockwise order! (you specify left, then right)
+        //    3. Most angles are in radians internally in ftclib
         drive = new HDrive(
             motor_left, motor_right, motor_slide,
-            60, 120, 270
+            Math.toRadians(60), Math.toRadians(300), Math.toRadians(180)
         );
+        drive.setMaxSpeed(0.80); // 0.0 to 1.0, percentage of "max"
 
         // motor-specific setups
 
@@ -122,6 +140,17 @@ public class KiwiDrive extends OpMode {
         double diff = time - last_time;
         last_time = time;
 
+        YawPitchRollAngles ori = imu.getRobotYawPitchRollAngles();
+        telemetry.addData(
+            "imu",
+            String.format(
+                "yaw %.2f pitch %.2f roll %.2f",
+                ori.getYaw(AngleUnit.DEGREES),
+                ori.getPitch(AngleUnit.DEGREES),
+                ori.getRoll(AngleUnit.DEGREES)
+            )
+        );
+
         telemetry.addData("time", time);
         telemetry.addData("diff", diff);
         telemetry.addData(
@@ -136,8 +165,30 @@ public class KiwiDrive extends OpMode {
         );
         telemetry.update();
 
-        // simple at first: left-strick forward/back + turn
-        drive.driveRobotCentric(0.0, gamepad1.left_stick_y, gamepad1.right_stick_x);
+        this.heading += gamepad1.right_stick_x;
+        while (this.heading > 360) {
+            this.heading -= 360;
+        }
+        while (this.heading < 0) {
+            this.heading += 360;
+        }
+
+
+        if (false) {
+            // simple at first: left-strick forward/back + turn
+            drive.driveRobotCentric(
+                0.0, // strafe speed
+                -gamepad1.left_stick_y,  // forward/back (only) from left stick
+                gamepad1.right_stick_x / 2.0 // turn from right stick, but less input
+           );
+        } else {
+            drive.driveFieldCentric(
+                -gamepad1.left_stick_x,
+                -gamepad1.left_stick_y,
+                gamepad1.right_stick_x / 4.0,
+                0.0//Math.toRadians(this.heading)
+            );
+        }
     }
 
     @Override
