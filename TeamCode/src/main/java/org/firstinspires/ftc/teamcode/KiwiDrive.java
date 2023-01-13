@@ -152,9 +152,9 @@ public class KiwiDrive extends OpMode {
         gamepadex1.readButtons();
 
         // left / right BUMPERs switch mode
-        if (left_bumper.wasJustPressed()) {
+        if (bump_left.wasJustPressed()) {
             mode -= 1;
-        } else if (right_bumper.wasJustPressed()) {
+        } else if (bump_right.wasJustPressed()) {
             mode += 1;
         }
         if (mode < 0) mode = 2;
