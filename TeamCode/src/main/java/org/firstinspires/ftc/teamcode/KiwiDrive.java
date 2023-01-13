@@ -5,12 +5,16 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.hardware.motors.RevRoboticsUltraPlanetaryHdHexMotor;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 
@@ -18,6 +22,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 //import com.arcrobotics.ftclib.hardware.RevIMU;
 import com.arcrobotics.ftclib.drivebase.HDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.arcrobotics.ftclib.hardware.RevIMU;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 
 
@@ -47,6 +52,10 @@ public class KiwiDrive extends OpMode {
     // navigation variables
     private double heading = 0.0;
 
+    // controller-mode
+    private int mode = 0;  // default
+
+
     @Override
     public void init() {
         telemetry.addData("status", "startup");
@@ -66,6 +75,10 @@ public class KiwiDrive extends OpMode {
         motor_left = new Motor(hardwareMap, "left");
         motor_right = new Motor(hardwareMap, "right");
         motor_slide = new Motor(hardwareMap, "slide");
+
+        motor_left.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        motor_slide.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
         // motor power levels
         motor_left.setRunMode(Motor.RunMode.RawPower);
@@ -98,7 +111,7 @@ public class KiwiDrive extends OpMode {
             motor_left, motor_right, motor_slide,
             Math.toRadians(60), Math.toRadians(300), Math.toRadians(180)
         );
-        drive.setMaxSpeed(0.80); // 0.0 to 1.0, percentage of "max"
+        drive.setMaxSpeed(0.50); // 0.0 to 1.0, percentage of "max"
 
         // motor-specific setups
 
@@ -129,7 +142,8 @@ public class KiwiDrive extends OpMode {
         // Executed once immediately after a user presses Play (▶) on
         // the Driver Station
 
-        // XXX reset variables, etc here
+        // make sure robot starts at correct position
+        imu.resetYaw();
     }
 
     @Override
@@ -140,16 +154,18 @@ public class KiwiDrive extends OpMode {
         double diff = time - last_time;
         last_time = time;
 
-        YawPitchRollAngles ori = imu.getRobotYawPitchRollAngles();
-        telemetry.addData(
-            "imu",
-            String.format(
-                "yaw %.2f pitch %.2f roll %.2f",
-                ori.getYaw(AngleUnit.DEGREES),
-                ori.getPitch(AngleUnit.DEGREES),
-                ori.getRoll(AngleUnit.DEGREES)
-            )
-        );
+        if (false) {
+            YawPitchRollAngles ori = imu.getRobotYawPitchRollAngles();
+            telemetry.addData(
+                "imu",
+                String.format(
+                    "yaw %.2f pitch %.2f roll %.2f",
+                    ori.getYaw(AngleUnit.DEGREES),
+                    ori.getPitch(AngleUnit.DEGREES),
+                    ori.getRoll(AngleUnit.DEGREES)
+                )
+            );
+        }
 
         telemetry.addData("time", time);
         telemetry.addData("diff", diff);
@@ -163,7 +179,6 @@ public class KiwiDrive extends OpMode {
                 gamepad1.right_stick_y
             )
         );
-        telemetry.update();
 
         this.heading += gamepad1.right_stick_x;
         while (this.heading > 360) {
@@ -173,22 +188,53 @@ public class KiwiDrive extends OpMode {
             this.heading += 360;
         }
 
+        // left / right BUMPERs switch mode
+        if (gamepad1.left_bumper) {
+            mode -= 1;
+        } else if (gamepad1.right_bumper) {
+            mode += 1;
+        }
+        if (mode < 0) mode = 2;
+        if (mode > 2) mode = 0;
+        telemetry.addData("mode", mode);
 
-        if (false) {
+        // allow us to reset the yaw?
+        if (gamepad1.a) {
+            imu.resetYaw();
+        }
+
+        if (mode == 0) {
+            gamepad1.setLedColor(255, 0, 0, Gamepad.LED_DURATION_CONTINUOUS);
             // simple at first: left-strick forward/back + turn
             drive.driveRobotCentric(
                 0.0, // strafe speed
                 -gamepad1.left_stick_y,  // forward/back (only) from left stick
                 gamepad1.right_stick_x / 2.0 // turn from right stick, but less input
            );
-        } else {
+        } else if (mode == 1) {
+            gamepad1.setLedColor(0, 255, 0, Gamepad.LED_DURATION_CONTINUOUS);
+            drive.driveRobotCentric(
+                gamepad1.left_stick_x,
+                gamepad1.left_stick_y,
+                gamepad1.right_stick_x / 2.0
+            );
+        } else if (mode == 2) {
+            gamepad1.setLedColor(0, 0, 255, Gamepad.LED_DURATION_CONTINUOUS);
+            double heading = imu.getRobotOrientation(
+                AxesReference.INTRINSIC,
+                AxesOrder.XYZ,
+                AngleUnit.DEGREES
+            ).thirdAngle;
+            telemetry.addData("heading", heading);
             drive.driveFieldCentric(
-                -gamepad1.left_stick_x,
-                -gamepad1.left_stick_y,
-                gamepad1.right_stick_x / 4.0,
-                0.0//Math.toRadians(this.heading)
+                gamepad1.left_stick_x,
+                gamepad1.left_stick_y,
+                gamepad1.right_stick_x / 2.0,
+                (heading + 180.0)
             );
         }
+
+        telemetry.update();
     }
 
     @Override
