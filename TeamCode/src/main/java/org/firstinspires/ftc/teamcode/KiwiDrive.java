@@ -24,6 +24,8 @@ import com.arcrobotics.ftclib.drivebase.HDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.RevIMU;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
+import com.arcrobotics.ftclib.gamepad.ButtonReader;
 
 
 @TeleOp(name="Kiwi: OpMode", group="Opmode")
@@ -42,19 +44,21 @@ public class KiwiDrive extends OpMode {
     // Holonomic Drive
     private HDrive drive = null;
 
-    // declare servos
+    // servos (for the claw)
     private Servo servo_claw_left = null;
     private Servo servo_claw_right = null;
 
     // time-tracking
     private double last_time = 0.0;
 
-    // navigation variables
-    private double heading = 0.0;
-
     // controller-mode
     private int mode = 0;  // default
 
+    // setup for various controls
+    private GamepadEx gamepadex1 = null;
+    private ButtonReader bump_left = null;
+    private ButtonReader bump_right = null;
+    private ButtonReader button_a = null;
 
     @Override
     public void init() {
@@ -80,7 +84,6 @@ public class KiwiDrive extends OpMode {
         motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_slide.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
-        // motor power levels
         motor_left.setRunMode(Motor.RunMode.RawPower);
         motor_right.setRunMode(Motor.RunMode.RawPower);
         motor_slide.setRunMode(Motor.RunMode.RawPower);
@@ -88,6 +91,11 @@ public class KiwiDrive extends OpMode {
         motor_right.setInverted(false);
         motor_slide.setInverted(false);
 
+        // setup some controller listeners
+        gamepadex1 = new GamepadEx(gamepad1);
+        bump_left = new ButtonReader(gamepadex1, GamepadKeys.Button.LEFT_BUMPER);
+        bump_right = new ButtonReader(gamepadex1, GamepadKeys.Button.RIGHT_BUMPER);
+        button_a = new ButtonReader(gamepadex1, GamepadKeys.Button.A);
 
         //motor_elevator = hardwareMap.get(DcMotorEx.class, "elevator");
 
@@ -99,33 +107,17 @@ public class KiwiDrive extends OpMode {
         // first three arguments are the motors themselves, the next
         // three numbers are 'angles' for the motors -- this is their
         // mounting angle, relative to "0" being "forward"
-        // (counter-clockwise, because "right handed coordinates" and
-        // +z is up)
 
         // NOTE NOTE!
         //    0. The angle "0" is straight ahead
         //    1. Angles are "right-hand coordinate" so "20" means "20 degress counter-clockwise"
         //    2. The motors ARE NOT IN counter-clockwise order! (you specify left, then right)
-        //    3. Most angles are in radians internally in ftclib
+        //    3. Most angles are in RADIANS internally in ftclib (including these)
         drive = new HDrive(
             motor_left, motor_right, motor_slide,
             Math.toRadians(60), Math.toRadians(300), Math.toRadians(180)
         );
         drive.setMaxSpeed(0.50); // 0.0 to 1.0, percentage of "max"
-
-        // motor-specific setups
-
-        // elevator setup
-        // https://ftctechnh.github.io/ftc_app/doc/javadoc/com/qualcomm/robotcore/hardware/DcMotor.ZeroPowerBehavior.html
-        //motor_elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        //motor_elevator.setDirection(DcMotor.Direction.FORWARD);
-
-        // claw servo setup
-        //servo_claw_left.setDirection(Servo.Direction.FORWARD);
-        //servo_claw_right.setDirection(Servo.Direction.FORWARD);
-        // XXX what do these mean?
-        //servo_claw_left.scaleRange(0.0, 1.0);
-        //servo_claw_right.scaleRange( 0.0, 1.0);
 
         telemetry.addData("status", "initialized");
         telemetry.update();
@@ -154,44 +146,15 @@ public class KiwiDrive extends OpMode {
         double diff = time - last_time;
         last_time = time;
 
-        if (false) {
-            YawPitchRollAngles ori = imu.getRobotYawPitchRollAngles();
-            telemetry.addData(
-                "imu",
-                String.format(
-                    "yaw %.2f pitch %.2f roll %.2f",
-                    ori.getYaw(AngleUnit.DEGREES),
-                    ori.getPitch(AngleUnit.DEGREES),
-                    ori.getRoll(AngleUnit.DEGREES)
-                )
-            );
-        }
-
         telemetry.addData("time", time);
-        telemetry.addData("diff", diff);
-        telemetry.addData(
-            "stick",
-            String.format(
-                "stick: left (%.2f, %.2f) right (%.2f, %.2f)",
-                gamepad1.left_stick_x,
-                gamepad1.left_stick_y,
-                gamepad1.right_stick_x,
-                gamepad1.right_stick_y
-            )
-        );
 
-        this.heading += gamepad1.right_stick_x;
-        while (this.heading > 360) {
-            this.heading -= 360;
-        }
-        while (this.heading < 0) {
-            this.heading += 360;
-        }
+        // let FTCLib updates it's button status
+        gamepadex1.readButtons();
 
         // left / right BUMPERs switch mode
-        if (gamepad1.left_bumper) {
+        if (left_bumper.wasJustPressed()) {
             mode -= 1;
-        } else if (gamepad1.right_bumper) {
+        } else if (right_bumper.wasJustPressed()) {
             mode += 1;
         }
         if (mode < 0) mode = 2;
@@ -199,12 +162,11 @@ public class KiwiDrive extends OpMode {
         telemetry.addData("mode", mode);
 
         // allow us to reset the yaw?
-        if (gamepad1.a) {
+        if (button_a.wasJustPressed()) {
             imu.resetYaw();
         }
 
         if (mode == 0) {
-            gamepad1.setLedColor(255, 0, 0, Gamepad.LED_DURATION_CONTINUOUS);
             // simple at first: left-strick forward/back + turn
             drive.driveRobotCentric(
                 0.0, // strafe speed
@@ -212,22 +174,19 @@ public class KiwiDrive extends OpMode {
                 gamepad1.right_stick_x / 2.0 // turn from right stick, but less input
            );
         } else if (mode == 1) {
-            gamepad1.setLedColor(0, 255, 0, Gamepad.LED_DURATION_CONTINUOUS);
             drive.driveRobotCentric(
                 gamepad1.left_stick_x,
                 gamepad1.left_stick_y,
                 gamepad1.right_stick_x / 2.0
             );
         } else if (mode == 2) {
-            gamepad1.setLedColor(0, 0, 255, Gamepad.LED_DURATION_CONTINUOUS);
-            gamepad2.rumble(1.0, 1.0, 1000);
             double heading = - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             telemetry.addData("heading", heading);
 
             drive.driveFieldCentric(
                 gamepad1.left_stick_x,
                 gamepad1.left_stick_y,
-                gamepad1.right_stick_x / 2.0,
+                gamepad1.right_stick_x * 0.75,
                 heading
             );
         }
