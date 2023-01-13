@@ -220,17 +220,15 @@ public class KiwiDrive extends OpMode {
             );
         } else if (mode == 2) {
             gamepad1.setLedColor(0, 0, 255, Gamepad.LED_DURATION_CONTINUOUS);
-            double heading = imu.getRobotOrientation(
-                AxesReference.INTRINSIC,
-                AxesOrder.XYZ,
-                AngleUnit.DEGREES
-            ).thirdAngle;
+            gamepad2.rumble(1.0, 1.0, 1000);
+            double heading = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES).thirdAngle;
+            heading = - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             telemetry.addData("heading", heading);
             drive.driveFieldCentric(
                 gamepad1.left_stick_x,
                 gamepad1.left_stick_y,
                 gamepad1.right_stick_x / 2.0,
-                (heading + 180.0)
+                heading
             );
         }
 
