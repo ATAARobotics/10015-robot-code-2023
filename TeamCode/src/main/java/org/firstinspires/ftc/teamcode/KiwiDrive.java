@@ -59,11 +59,14 @@ public class KiwiDrive extends OpMode {
 
     // setup for various controls
     private GamepadEx gamepadex1 = null;
+    private GamepadEx gamepadex2 = null;
     private ButtonReader bump_left = null;
     private ButtonReader bump_right = null;
     private ButtonReader button_a = null;
     private TriggerReader trigger_left = null;
     private TriggerReader trigger_right = null;
+    private TriggerReader trigger_left2 = null;
+    private TriggerReader trigger_right2 = null;
 
     @Override
     public void init() {
@@ -88,6 +91,7 @@ public class KiwiDrive extends OpMode {
         motor_left.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_slide.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        motor_elevator.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
         motor_left.setRunMode(Motor.RunMode.RawPower);
         motor_right.setRunMode(Motor.RunMode.RawPower);
@@ -98,11 +102,12 @@ public class KiwiDrive extends OpMode {
 
         // setup some controller listeners
         gamepadex1 = new GamepadEx(gamepad1);
+        gamepadex2 = new GamepadEx(gamepad2);
 
-        //motor_elevator = hardwareMap.get(DcMotorEx.class, "elevator");
+        motor_elevator = new Motor(hardwareMap, "hdelevator");
 
-        //servo_claw_left = hardwareMap.get(Servo.class, "clawLeft");
-        //servo_claw_right = hardwareMap.get(Servo.class, "clawRight");
+        servo_claw_left = hardwareMap.get(Servo.class, "clawLeft");
+        servo_claw_right = hardwareMap.get(Servo.class, "clawRight");
 
         // initialize holonomic drive
 
@@ -152,6 +157,21 @@ public class KiwiDrive extends OpMode {
 
         // let FTCLib updates it's button status
         gamepadex1.readButtons();
+        gamepadex2.readButtons();
+
+        telemetry.addData("elevator", "unknown");
+        if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
+            //motor_elevator.set(0.5);
+            telemetry.addData("elevator","up");
+        }
+        else if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
+            //motor_elevator.set(-0.5);
+            telemetry.addData("elevator","down");
+        }
+        else {
+            //motor_elevator.set(0);
+            telemetry.addData("elevator","stop");
+        }
 
         // left / right BUMPERs switch mode
         if (gamepadex1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
