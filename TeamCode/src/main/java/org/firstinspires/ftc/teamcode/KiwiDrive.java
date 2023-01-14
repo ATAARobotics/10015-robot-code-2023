@@ -175,6 +175,7 @@ public class KiwiDrive extends OpMode {
             max_speed = 0.75;
         }
         drive.setMaxSpeed(max_speed);
+        telemetry.addData("max_speed", max_speed);
 
         if (mode == 0) {
             // simple at first: left-strick forward/back + turn
