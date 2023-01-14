@@ -145,7 +145,6 @@ public class KiwiDrive extends OpMode {
         // Executed repeatedly after a user presses Play (▶) but
         // before a user presses Stop (◼) on the Driver Station
 
-        double max_speed = 0.5;
         double diff = time - last_time;
         last_time = time;
 
@@ -169,13 +168,17 @@ public class KiwiDrive extends OpMode {
             imu.resetYaw();
         }
         // speed controls
-        if (gamepadex1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) < 0.5){
+        double max_speed = 0.5;
+        if (gamepadex1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5){
+            // if left-trigger "pressed"
             max_speed = 0.25;
-        } else if (gamepadex1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) < 0.5){
+        } else if (gamepadex1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
+            // if ONLY right-trigger "pressed"
             max_speed = 0.75;
         }
         drive.setMaxSpeed(max_speed);
         telemetry.addData("max_speed", max_speed);
+        telemetry.addData("trigger", gamepadex1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER));
 
         if (mode == 0) {
             // simple at first: left-strick forward/back + turn
