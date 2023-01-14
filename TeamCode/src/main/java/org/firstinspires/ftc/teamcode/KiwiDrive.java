@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.arcrobotics.ftclib.command.button.Trigger;
+import com.arcrobotics.ftclib.gamepad.TriggerReader;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -26,6 +28,7 @@ import com.arcrobotics.ftclib.hardware.RevIMU;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.gamepad.ButtonReader;
+import com.arcrobotics.ftclib.gamepad.TriggerReader;
 
 
 @TeleOp(name="Kiwi: OpMode", group="Opmode")
@@ -59,6 +62,8 @@ public class KiwiDrive extends OpMode {
     private ButtonReader bump_left = null;
     private ButtonReader bump_right = null;
     private ButtonReader button_a = null;
+    private TriggerReader trigger_left = null;
+    private TriggerReader trigger_right = null;
 
     @Override
     public void init() {
@@ -93,9 +98,6 @@ public class KiwiDrive extends OpMode {
 
         // setup some controller listeners
         gamepadex1 = new GamepadEx(gamepad1);
-        bump_left = new ButtonReader(gamepadex1, GamepadKeys.Button.LEFT_BUMPER);
-        bump_right = new ButtonReader(gamepadex1, GamepadKeys.Button.RIGHT_BUMPER);
-        button_a = new ButtonReader(gamepadex1, GamepadKeys.Button.A);
 
         //motor_elevator = hardwareMap.get(DcMotorEx.class, "elevator");
 
@@ -143,6 +145,7 @@ public class KiwiDrive extends OpMode {
         // Executed repeatedly after a user presses Play (▶) but
         // before a user presses Stop (◼) on the Driver Station
 
+        double max_speed = 0.5;
         double diff = time - last_time;
         last_time = time;
 
@@ -152,9 +155,9 @@ public class KiwiDrive extends OpMode {
         gamepadex1.readButtons();
 
         // left / right BUMPERs switch mode
-        if (bump_left.wasJustPressed()) {
+        if (gamepadex1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
             mode -= 1;
-        } else if (bump_right.wasJustPressed()) {
+        } else if (gamepadex1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
             mode += 1;
         }
         if (mode < 0) mode = 2;
@@ -162,15 +165,22 @@ public class KiwiDrive extends OpMode {
         telemetry.addData("mode", mode);
 
         // allow us to reset the yaw?
-        if (button_a.wasJustPressed()) {
+        if (gamepadex1.wasJustPressed(GamepadKeys.Button.A)) {
             imu.resetYaw();
         }
+        // speed controls
+        if (gamepadex1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) < 0.5){
+            max_speed = 0.25;
+        } else if (gamepadex1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) < 0.5){
+            max_speed = 0.75;
+        }
+        drive.setMaxSpeed(max_speed);
 
         if (mode == 0) {
             // simple at first: left-strick forward/back + turn
             drive.driveRobotCentric(
                 0.0, // strafe speed
-                -gamepad1.left_stick_y,  // forward/back (only) from left stick
+                gamepad1.left_stick_y,  // forward/back (only) from left stick
                 gamepad1.right_stick_x / 2.0 // turn from right stick, but less input
            );
         } else if (mode == 1) {
