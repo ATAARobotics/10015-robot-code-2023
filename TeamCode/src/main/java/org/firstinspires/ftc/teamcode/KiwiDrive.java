@@ -167,14 +167,14 @@ public class KiwiDrive extends OpMode {
         if (gamepadex1.wasJustPressed(GamepadKeys.Button.A)) {
             imu.resetYaw();
         }
-        // speed controls
-        double max_speed = 0.5;
+        // speed controls (percentage of max)
+        double max_speed = 0.45;
         if (gamepadex1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5){
             // if left-trigger "pressed"
-            max_speed = 0.25;
+            max_speed = 0.30;
         } else if (gamepadex1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
             // if ONLY right-trigger "pressed"
-            max_speed = 0.75;
+            max_speed = 0.65;
         }
         drive.setMaxSpeed(max_speed);
         telemetry.addData("max_speed", max_speed);
