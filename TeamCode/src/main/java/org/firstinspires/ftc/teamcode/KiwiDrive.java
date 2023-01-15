@@ -110,6 +110,7 @@ public class KiwiDrive extends OpMode {
         gamepadex1 = new GamepadEx(gamepad1);
         gamepadex2 = new GamepadEx(gamepad2);
 
+        // elevator / claw motors
         motor_elevator = new Motor(hardwareMap, "hdelevator");
         servo_claw_left = hardwareMap.get(Servo.class, "hdclawleft");
         servo_claw_right = hardwareMap.get(Servo.class, "hdclawright");
@@ -165,21 +166,6 @@ public class KiwiDrive extends OpMode {
         gamepadex1.readButtons();
         gamepadex2.readButtons();
 
-        // Elevator Controls (move to command?)
-        telemetry.addData("elevator-encoder", motor_elevator.getCurrentPosition());
-        telemetry.addData("elevator", "unknown");
-        if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
-            //motor_elevator.set(0.5);
-            telemetry.addData("elevator","up");
-        }
-        else if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
-            //motor_elevator.set(-0.5);
-            telemetry.addData("elevator","down");
-        }
-        else {
-            //motor_elevator.set(0);
-            telemetry.addData("elevator","stop");
-        }
 
         // left / right BUMPERs switch mode
         if (gamepadex1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
