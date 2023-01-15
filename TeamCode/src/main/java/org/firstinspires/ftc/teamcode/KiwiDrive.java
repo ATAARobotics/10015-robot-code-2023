@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.arcrobotics.ftclib.command.button.Trigger;
+import com.arcrobotics.ftclib.gamepad.ToggleButtonReader;
 import com.arcrobotics.ftclib.gamepad.TriggerReader;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -50,6 +51,10 @@ public class KiwiDrive extends OpMode {
     // servos (for the claw)
     private Servo servo_claw_left = null;
     private Servo servo_claw_right = null;
+
+    //servotoggle
+    // false is open true is closed
+    private boolean claw_position = false;
 
     // time-tracking
     private double last_time = 0.0;
@@ -106,9 +111,8 @@ public class KiwiDrive extends OpMode {
         gamepadex2 = new GamepadEx(gamepad2);
 
         motor_elevator = new Motor(hardwareMap, "hdelevator");
-
-        //servo_claw_left = hardwareMap.get(Servo.class, "clawLeft");
-        //servo_claw_right = hardwareMap.get(Servo.class, "clawRight");
+        servo_claw_left = hardwareMap.get(Servo.class, "hdclawleft");
+        servo_claw_right = hardwareMap.get(Servo.class, "hdclawright");
 
         // initialize holonomic drive
 
@@ -187,10 +191,52 @@ public class KiwiDrive extends OpMode {
         if (mode > 2) mode = 0;
         telemetry.addData("mode", mode);
 
-        // allow us to reset the yaw?
-        if (gamepadex1.wasJustPressed(GamepadKeys.Button.A)) {
-            imu.resetYaw();
+
+        // Elevator Controls (move to command?)
+        double elevator_high_limit = 1000;
+        double elevator_low_limit = 0;
+        telemetry.addData("elevator-encoder", motor_elevator.getCurrentPosition());
+        telemetry.addData("elevator", "unknown");
+        if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
+            if (motor_elevator.getCurrentPosition() < elevator_high_limit) {
+                motor_elevator.set(0.1);
+                telemetry.addData("elevator","up");
+            }
         }
+        else if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
+            if (motor_elevator.getCurrentPosition() > elevator_low_limit) {
+                motor_elevator.set(-0.1);
+                telemetry.addData("elevator","down");
+            }
+        }
+        else {
+            motor_elevator.set(0);
+            telemetry.addData("elevator","stop");
+        }
+        telemetry.addData("elevator-position", motor_elevator.getCurrentPosition());
+
+
+        //claw controls
+        if (gamepadex2.wasJustPressed(GamepadKeys.Button.A)) {
+            claw_position = !claw_position;
+            if (claw_position == true) {
+                servo_claw_left.setPosition(1.00);
+                servo_claw_right.setPosition(0.00);
+            } else { // must be false
+                servo_claw_left.setPosition(0.25);
+                servo_claw_right.setPosition(0.75);
+            }
+        }
+        telemetry.addData(
+            "servos",
+            String.format(
+                "claw %b left %.2f right %.2f",
+                claw_position,
+                servo_claw_left.getPosition(),
+                servo_claw_right.getPosition()
+            )
+        );
+
         // speed controls (percentage of max)
         double max_speed = 0.45;
         if (gamepadex1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5){
