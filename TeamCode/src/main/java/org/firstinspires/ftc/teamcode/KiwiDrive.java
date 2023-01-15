@@ -56,6 +56,9 @@ public class KiwiDrive extends OpMode {
     // false is open true is closed
     private boolean claw_position = false;
 
+    //eleator position
+    private int elevator_position = 0;
+
     // time-tracking
     private double last_time = 0.0;
 
@@ -68,6 +71,10 @@ public class KiwiDrive extends OpMode {
     private ButtonReader bump_left = null;
     private ButtonReader bump_right = null;
     private ButtonReader button_a = null;
+    private ButtonReader button_y = null;
+    private ButtonReader button_b = null;
+    private ButtonReader button_x = null;
+    private ButtonReader dpad_down = null;
     private TriggerReader trigger_left = null;
     private TriggerReader trigger_right = null;
     private TriggerReader trigger_left2 = null;
@@ -181,7 +188,8 @@ public class KiwiDrive extends OpMode {
         if (mode < 0) mode = 2;
         if (mode > 2) mode = 0;
         telemetry.addData("mode", mode);
-
+        elevator_position = motor_elevator.getCurrentPosition();
+        double elevator_speed = 0.5;
 
         // Elevator Controls (move to command?)
         double elevator_high_limit = 1000;
@@ -190,13 +198,13 @@ public class KiwiDrive extends OpMode {
         telemetry.addData("elevator", "unknown");
         if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
             if (true){//motor_elevator.getCurrentPosition() < elevator_high_limit) {
-                motor_elevator.set(-0.5);
+                motor_elevator.set(-elevator_speed);
                 telemetry.addData("elevator","down");
             }
         }
         else if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
             if (true){//motor_elevator.getCurrentPosition() > elevator_low_limit) {
-                motor_elevator.set(0.5);
+                motor_elevator.set(elevator_speed);
                 telemetry.addData("elevator","up");
             }
         }
@@ -205,14 +213,41 @@ public class KiwiDrive extends OpMode {
             telemetry.addData("elevator","stop");
         }
         telemetry.addData("elevator-position", motor_elevator.getCurrentPosition());
-
-
+        //elevator presets
+        //low 700 meduim 1190 high1560 could go higher
+        if (gamepadex2.isDown(GamepadKeys.Button.A)) {
+            if (elevator_position > 5) {
+                motor_elevator.set(-elevator_speed);
+            }
+        }
+        if (gamepadex2.isDown(GamepadKeys.Button.Y)) {
+            if (elevator_position < 1550) {
+                motor_elevator.set(elevator_speed);
+            }
+        }
+        if (gamepadex2.isDown(GamepadKeys.Button.X)) {
+            if (elevator_position < 695) {
+                motor_elevator.set(elevator_speed);
+            }
+            else if (elevator_position > 705) {
+                motor_elevator.set(-elevator_speed);
+            }
+        }
+        if (gamepadex2.isDown(GamepadKeys.Button.B)) {
+            if(elevator_position < 1185) {
+                motor_elevator.set(elevator_speed);
+            }
+            else if (elevator_position > 1195) {
+                motor_elevator.set(-elevator_speed);
+            }
+        }
         //claw controls
-        if (gamepadex2.wasJustPressed(GamepadKeys.Button.A)) {
+        if (gamepadex2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN)) {
             claw_position = !claw_position;
             if (claw_position == true) {  // closed
                 servo_claw_left.setPosition(1.00);
                 servo_claw_right.setPosition(0.00);
+                //motor_elevator.set(0.5)for 1 second?
             } else { // must be false (open)
                 servo_claw_left.setPosition(0.25);
                 servo_claw_right.setPosition(0.75);
@@ -267,7 +302,6 @@ public class KiwiDrive extends OpMode {
 
         telemetry.update();
     }
-
     @Override
     public void stop() {
         // Executed once immediately after a user presses Stop (◼) on
