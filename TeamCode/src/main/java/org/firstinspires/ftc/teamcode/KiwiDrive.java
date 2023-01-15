@@ -87,6 +87,7 @@ public class KiwiDrive extends OpMode {
         motor_left = new Motor(hardwareMap, "left");
         motor_right = new Motor(hardwareMap, "right");
         motor_slide = new Motor(hardwareMap, "slide");
+        motor_elevator = new Motor(hardwareMap, "hdelevator");
 
         motor_left.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
@@ -106,8 +107,8 @@ public class KiwiDrive extends OpMode {
 
         motor_elevator = new Motor(hardwareMap, "hdelevator");
 
-        servo_claw_left = hardwareMap.get(Servo.class, "clawLeft");
-        servo_claw_right = hardwareMap.get(Servo.class, "clawRight");
+        //servo_claw_left = hardwareMap.get(Servo.class, "clawLeft");
+        //servo_claw_right = hardwareMap.get(Servo.class, "clawRight");
 
         // initialize holonomic drive
 
@@ -143,6 +144,7 @@ public class KiwiDrive extends OpMode {
 
         // make sure robot starts at correct position
         imu.resetYaw();
+        motor_elevator.resetEncoder();
     }
 
     @Override
@@ -159,6 +161,8 @@ public class KiwiDrive extends OpMode {
         gamepadex1.readButtons();
         gamepadex2.readButtons();
 
+        // Elevator Controls (move to command?)
+        telemetry.addData("elevator-encoder", motor_elevator.getCurrentPosition());
         telemetry.addData("elevator", "unknown");
         if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
             //motor_elevator.set(0.5);
@@ -198,7 +202,6 @@ public class KiwiDrive extends OpMode {
         }
         drive.setMaxSpeed(max_speed);
         telemetry.addData("max_speed", max_speed);
-        telemetry.addData("trigger", gamepadex1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER));
 
         if (mode == 0) {
             // simple at first: left-strick forward/back + turn
