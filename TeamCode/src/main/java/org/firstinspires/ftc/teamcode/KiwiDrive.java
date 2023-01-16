@@ -30,7 +30,7 @@ import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.gamepad.ButtonReader;
 import com.arcrobotics.ftclib.gamepad.TriggerReader;
-
+import com.arcrobotics.ftclib.controller.PIDController;
 
 @TeleOp(name="Kiwi: OpMode", group="Opmode")
 public class KiwiDrive extends OpMode {
@@ -109,11 +109,13 @@ public class KiwiDrive extends OpMode {
         motor_left.setRunMode(Motor.RunMode.RawPower);
         motor_right.setRunMode(Motor.RunMode.RawPower);
         motor_slide.setRunMode(Motor.RunMode.RawPower);
-        motor_elevator.setRunMode(Motor.RunMode.RawPower);
+        motor_elevator.setRunMode(Motor.RunMode.PositionControl);
         motor_left.setInverted(false);
         motor_right.setInverted(false);
         motor_slide.setInverted(false);
         motor_elevator.setInverted(true); // so that "up" is positive for us
+        motor_elevator.set(0);
+        motor_elevator.setPositionCoefficient(0.02);
 
         // setup some controller listeners
         gamepadex1 = new GamepadEx(gamepad1);
@@ -189,58 +191,67 @@ public class KiwiDrive extends OpMode {
         if (mode > 2) mode = 0;
         telemetry.addData("mode", mode);
         elevator_position = motor_elevator.getCurrentPosition();
-        double elevator_speed = 0.8;
+        double elevator_speed = 0.65;
 
         // Elevator Controls (move to command?)
         double elevator_high_limit = 1575;
         double elevator_low_limit = 10;
         telemetry.addData("elevator-encoder", motor_elevator.getCurrentPosition());
+        telemetry.addData("elevator-value", motor_elevator.get());
         telemetry.addData("elevator", "unknown");
-        if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
-            if (motor_elevator.getCurrentPosition() < elevator_high_limit) {
-                motor_elevator.set(-elevator_speed);
-                telemetry.addData("elevator","down");
-            }
-        }
-        else if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
-            if (motor_elevator.getCurrentPosition() > elevator_low_limit) {
-                motor_elevator.set(elevator_speed);
-                telemetry.addData("elevator","up");
-            }
-        }
-        else {
+
+        // elevator control
+
+        //elevator presets
+        if (true) {
+            //build-in P-controller presets
+            //low 700 meduim 1190 high1560 could go higher
+
+            motor_elevator.setRunMode(Motor.RunMode.PositionControl);
             motor_elevator.set(0);
             telemetry.addData("elevator","stop");
-        }
-        telemetry.addData("elevator-position", motor_elevator.getCurrentPosition());
-        //elevator presets
-        //low 700 meduim 1190 high1560 could go higher
-        if (gamepadex2.isDown(GamepadKeys.Button.A)) {
-            if (elevator_position > 5) {
-                motor_elevator.set(-elevator_speed);
+
+            if (gamepadex2.isDown(GamepadKeys.Button.A)) {
+                motor_elevator.setTargetPosition(5);
+                telemetry.addData("elevator", "preset-bottom");
+            }
+            if (gamepadex2.isDown(GamepadKeys.Button.X)) {
+                motor_elevator.setTargetPosition(700);
+                telemetry.addData("elevator", "preset-short");
+            }
+            if (gamepadex2.isDown(GamepadKeys.Button.B)) {
+                motor_elevator.setTargetPosition(1190);
+                telemetry.addData("elevator", "preset-medium");
+            }
+            if (gamepadex2.isDown(GamepadKeys.Button.Y)) {
+                motor_elevator.setTargetPosition(1550);
+                telemetry.addData("elevator", "preset-tall");
+            }
+            // XXX need some var to control "are we going to a preset at all?"
+            // XXX or maybe just make the triggers control the "set position" manually?
+            if (!motor_elevator.atTargetPosition()) {
+                // XXX what about "down"?
+                motor_elevator.set(0.3);
+            }
+        } else {
+            // manual control
+
+            // XXX do we need to set run-mode to Raw Power for this to work nicely?
+            if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
+                motor_elevator.setRunMode(Motor.RunMode.RawPower);
+                if (motor_elevator.getCurrentPosition() > elevator_low_limit) {
+                    motor_elevator.set(-elevator_speed);
+                    telemetry.addData("elevator","down");
+                }
+            } else if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
+                motor_elevator.setRunMode(Motor.RunMode.RawPower);
+                if (motor_elevator.getCurrentPosition() < elevator_high_limit) {
+                    motor_elevator.set(elevator_speed);
+                    telemetry.addData("elevator","up");
+                }
             }
         }
-        if (gamepadex2.isDown(GamepadKeys.Button.Y)) {
-            if (elevator_position < 1550) {
-                motor_elevator.set(elevator_speed);
-            }
-        }
-        if (gamepadex2.isDown(GamepadKeys.Button.X)) {
-            if (elevator_position < 695) {
-                motor_elevator.set(elevator_speed);
-            }
-            else if (elevator_position > 705) {
-                motor_elevator.set(-elevator_speed);
-            }
-        }
-        if (gamepadex2.isDown(GamepadKeys.Button.B)) {
-            if(elevator_position < 1185) {
-                motor_elevator.set(elevator_speed);
-            }
-            else if (elevator_position > 1195) {
-                motor_elevator.set(-elevator_speed);
-            }
-        }
+
         //claw controls
         if (gamepadex2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN)) {
             claw_position = !claw_position;
