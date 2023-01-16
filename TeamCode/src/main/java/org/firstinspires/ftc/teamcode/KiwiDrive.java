@@ -189,21 +189,21 @@ public class KiwiDrive extends OpMode {
         if (mode > 2) mode = 0;
         telemetry.addData("mode", mode);
         elevator_position = motor_elevator.getCurrentPosition();
-        double elevator_speed = 0.5;
+        double elevator_speed = 0.8;
 
         // Elevator Controls (move to command?)
-        double elevator_high_limit = 1000;
-        double elevator_low_limit = 0;
+        double elevator_high_limit = 1575;
+        double elevator_low_limit = 10;
         telemetry.addData("elevator-encoder", motor_elevator.getCurrentPosition());
         telemetry.addData("elevator", "unknown");
         if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
-            if (true){//motor_elevator.getCurrentPosition() < elevator_high_limit) {
+            if (motor_elevator.getCurrentPosition() < elevator_high_limit) {
                 motor_elevator.set(-elevator_speed);
                 telemetry.addData("elevator","down");
             }
         }
         else if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
-            if (true){//motor_elevator.getCurrentPosition() > elevator_low_limit) {
+            if (motor_elevator.getCurrentPosition() > elevator_low_limit) {
                 motor_elevator.set(elevator_speed);
                 telemetry.addData("elevator","up");
             }
