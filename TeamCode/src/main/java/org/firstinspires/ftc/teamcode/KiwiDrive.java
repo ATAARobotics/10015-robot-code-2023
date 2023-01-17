@@ -203,7 +203,7 @@ public class KiwiDrive extends OpMode {
         // elevator control
 
         //elevator presets
-        if (true) {
+        if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) < 0.5 && gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) < 0.5) {
             //build-in P-controller presets
             //low 700 meduim 1190 high1560 could go higher
 
@@ -235,22 +235,30 @@ public class KiwiDrive extends OpMode {
             }
         } else {
             // manual control
-
+            motor_elevator.setRunMode(Motor.RunMode.RawPower);
             // XXX do we need to set run-mode to Raw Power for this to work nicely?
-            if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5) {
-                motor_elevator.setRunMode(Motor.RunMode.RawPower);
+            double right_stick = -gamepadex2.getRightY();
+            if (right_stick > 0.05) {
+                if (motor_elevator.getCurrentPosition() < elevator_high_limit) {
+                    motor_elevator.set(elevator_speed * right_stick);
+                    telemetry.addData("elevator", "up");
+                }
+            } else if (right_stick < -0.05) {
                 if (motor_elevator.getCurrentPosition() > elevator_low_limit) {
-                    motor_elevator.set(-elevator_speed);
+                    // go really slow if we're close to the bottom
+                    if (motor_elevator.getCurrentPosition() < 150) {
+                        motor_elevator.set(elevator_speed * right_stick * 0.1);
+                    } else {
+                        motor_elevator.set(elevator_speed * right_stick * 0.3);
+                    }
                     telemetry.addData("elevator","down");
                 }
-            } else if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
-                motor_elevator.setRunMode(Motor.RunMode.RawPower);
-                if (motor_elevator.getCurrentPosition() < elevator_high_limit) {
-                    motor_elevator.set(elevator_speed);
-                    telemetry.addData("elevator","up");
-                }
+            } else {
+                motor_elevator.set(0.0);
+                telemetry.addData("elevator","stop");
             }
         }
+
 
         //claw controls
         if (gamepadex2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN)) {
