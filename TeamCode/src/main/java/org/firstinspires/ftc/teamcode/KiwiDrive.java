@@ -208,36 +208,36 @@ public class KiwiDrive extends OpMode {
             //low 700 meduim 1190 high1560 could go higher
 
             motor_elevator.setRunMode(Motor.RunMode.PositionControl);
-            motor_elevator.set(0);
-            telemetry.addData("elevator","stop");
 
             if (gamepadex2.isDown(GamepadKeys.Button.A)) {
-                motor_elevator.setTargetPosition(5);
+                motor_elevator.setTargetPosition(50);
                 telemetry.addData("elevator", "preset-bottom");
-            }
-            if (gamepadex2.isDown(GamepadKeys.Button.X)) {
+            } else if (gamepadex2.isDown(GamepadKeys.Button.X)) {
                 motor_elevator.setTargetPosition(700);
                 telemetry.addData("elevator", "preset-short");
-            }
-            if (gamepadex2.isDown(GamepadKeys.Button.B)) {
+            } else if (gamepadex2.isDown(GamepadKeys.Button.B)) {
                 motor_elevator.setTargetPosition(1190);
                 telemetry.addData("elevator", "preset-medium");
-            }
-            if (gamepadex2.isDown(GamepadKeys.Button.Y)) {
+            } else if (gamepadex2.isDown(GamepadKeys.Button.Y)) {
                 motor_elevator.setTargetPosition(1550);
                 telemetry.addData("elevator", "preset-tall");
+            } else {
+                motor_elevator.set(0);
+                telemetry.addData("elevator","stop");
             }
-            // XXX need some var to control "are we going to a preset at all?"
-            // XXX or maybe just make the triggers control the "set position" manually?
+
+            // actually input the control to the target
             if (!motor_elevator.atTargetPosition()) {
-                // XXX what about "down"?
+                // XXX why does this ever successfuly go "down" at all??
                 motor_elevator.set(0.3);
             }
         } else {
-            // manual control
+            // manual elevator control
             motor_elevator.setRunMode(Motor.RunMode.RawPower);
-            // XXX do we need to set run-mode to Raw Power for this to work nicely?
-            double right_stick = -gamepadex2.getRightY();
+            double right_stick = -gamepadex2.getRightY() * 0.8;
+//            if (gamepadex2.getLeftY() < 0.05 || gamepadex2.getLeftY() > 0.05) {
+//                right_stick = gamepadex2.getLeftY() * 0.5;
+//            }
             if (right_stick > 0.05) {
                 if (motor_elevator.getCurrentPosition() < elevator_high_limit) {
                     motor_elevator.set(elevator_speed * right_stick);
@@ -246,7 +246,7 @@ public class KiwiDrive extends OpMode {
             } else if (right_stick < -0.05) {
                 if (motor_elevator.getCurrentPosition() > elevator_low_limit) {
                     // go really slow if we're close to the bottom
-                    if (motor_elevator.getCurrentPosition() < 150) {
+                    if (motor_elevator.getCurrentPosition() < 400) {
                         motor_elevator.set(elevator_speed * right_stick * 0.1);
                     } else {
                         motor_elevator.set(elevator_speed * right_stick * 0.3);
