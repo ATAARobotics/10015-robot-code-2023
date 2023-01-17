@@ -63,7 +63,7 @@ public class KiwiDrive extends OpMode {
     private double last_time = 0.0;
 
     // controller-mode
-    private int mode = 0;  // default
+    private int mode = 2;  // default
 
     // setup for various controls
     private GamepadEx gamepadex1 = null;
@@ -182,13 +182,13 @@ public class KiwiDrive extends OpMode {
 
 
         // left / right BUMPERs switch mode
-        if (gamepadex1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-            mode -= 1;
-        } else if (gamepadex1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
-            mode += 1;
-        }
-        if (mode < 0) mode = 2;
-        if (mode > 2) mode = 0;
+       // if (gamepadex1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
+            //mode -= 1;
+       // } else if (gamepadex1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
+        //     mode += 1;
+        //}
+        //if (mode < 0) mode = 2;
+        //if (mode > 2) mode = 0;
         telemetry.addData("mode", mode);
         elevator_position = motor_elevator.getCurrentPosition();
         double elevator_speed = 0.65;
