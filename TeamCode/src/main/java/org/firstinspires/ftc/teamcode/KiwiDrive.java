@@ -5,11 +5,14 @@ import com.arcrobotics.ftclib.gamepad.ToggleButtonReader;
 import com.arcrobotics.ftclib.gamepad.TriggerReader;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -39,16 +42,16 @@ public class KiwiDrive extends OpMode {
     private Motor motor_right = null;
     private Motor motor_slide = null;
 
-    private Motor motor_elevator = null;
-    //private NormalizedColorSensor colorSensor = null;
-
     // Inertial Measurement Unit
     private IMU imu = null;
+
+    private ColorSensor colour = null;
 
     // Holonomic Drive
     private HDrive drive = null;
 
-    // servos (for the claw)
+    // claw + elevator setup
+    private Motor motor_elevator = null;
     private Servo servo_claw_left = null;
     private Servo servo_claw_right = null;
 
@@ -95,6 +98,8 @@ public class KiwiDrive extends OpMode {
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(imu_params);
 
+        colour = hardwareMap.get(ColorSensor.class, "colour");
+
         // initialize motors
         motor_left = new Motor(hardwareMap, "left");
         motor_right = new Motor(hardwareMap, "right");
@@ -106,9 +111,15 @@ public class KiwiDrive extends OpMode {
         motor_slide.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_elevator.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
-        motor_left.setRunMode(Motor.RunMode.RawPower);
-        motor_right.setRunMode(Motor.RunMode.RawPower);
-        motor_slide.setRunMode(Motor.RunMode.RawPower);
+        if (true) {
+            motor_left.setRunMode(Motor.RunMode.VelocityControl);
+            motor_right.setRunMode(Motor.RunMode.VelocityControl);
+            motor_slide.setRunMode(Motor.RunMode.VelocityControl);
+        } else {
+            motor_left.setRunMode(Motor.RunMode.RawPower);
+            motor_right.setRunMode(Motor.RunMode.RawPower);
+            motor_slide.setRunMode(Motor.RunMode.RawPower);
+        }
         motor_elevator.setRunMode(Motor.RunMode.PositionControl);
         motor_left.setInverted(false);
         motor_right.setInverted(false);
@@ -176,6 +187,19 @@ public class KiwiDrive extends OpMode {
 
         telemetry.addData("time", time);
 
+        String detected_colour = "unknown";
+        int r = colour.red();
+        int g = colour.green();
+        int b = colour.blue();
+        int max = Math.max(colour.alpha(), Math.max(b, Math.max(r, g)));
+        if (r == max) { detected_colour = "red"; }
+        if (g == max) { detected_colour = "green"; }
+        if (b == max) { detected_colour = "blue"; }
+        telemetry.addData(
+            "colour",
+            String.format("colour: red=%d green=%d blue=%d max=%d detected=%s", r, g, b, max, detected_colour)
+        );
+
         // let FTCLib updates it's button status
         gamepadex1.readButtons();
         gamepadex2.readButtons();
@@ -203,7 +227,7 @@ public class KiwiDrive extends OpMode {
         // elevator control
 
         //elevator presets
-        if (gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) < 0.5 && gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) < 0.5) {
+        if (false) {//gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) < 0.5 && gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) < 0.5) {
             //build-in P-controller presets
             //low 700 meduim 1190 high1560 could go higher
 
@@ -229,7 +253,7 @@ public class KiwiDrive extends OpMode {
             // actually input the control to the target
             if (!motor_elevator.atTargetPosition()) {
                 // XXX why does this ever successfuly go "down" at all??
-                motor_elevator.set(0.3);
+                motor_elevator.set(0.15);
             }
         } else {
             // manual elevator control
@@ -264,12 +288,12 @@ public class KiwiDrive extends OpMode {
         if (gamepadex2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN)) {
             claw_position = !claw_position;
             if (claw_position == true) {  // closed
-                servo_claw_left.setPosition(1.00);
-                servo_claw_right.setPosition(0.00);
+                servo_claw_left.setPosition(0.00);
+                servo_claw_right.setPosition(1.00);
                 //motor_elevator.set(0.5)for 1 second?
             } else { // must be false (open)
-                servo_claw_left.setPosition(0.25);
-                servo_claw_right.setPosition(0.75);
+                servo_claw_left.setPosition(1.0);
+                servo_claw_right.setPosition(0.0);
             }
         }
         telemetry.addData(
@@ -283,10 +307,10 @@ public class KiwiDrive extends OpMode {
         );
 
         // speed controls (percentage of max)
-        double max_speed = 0.45;
+        double max_speed = 0.30;
         if (gamepadex1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5){
             // if left-trigger "pressed"
-            max_speed = 0.30;
+            max_speed = 0.40;
         } else if (gamepadex1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
             // if ONLY right-trigger "pressed"
             max_speed = 0.65;
@@ -314,7 +338,8 @@ public class KiwiDrive extends OpMode {
             drive.driveFieldCentric(
                 gamepad1.left_stick_x,
                 gamepad1.left_stick_y,
-                gamepad1.right_stick_x * 0.75,
+                // angelika likes backwards stick
+                -gamepad1.right_stick_x * 0.75,
                 heading
             );
         }
