@@ -288,7 +288,7 @@ public class KiwiDrive extends OpMode {
         }
 
         if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) >0.5 || gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
-            motor_elevator.setTargetPosition(200);
+            motor_elevator.setTargetPosition(400);
             motor_elevator.setRunMode(Motor.RunMode.PositionControl);
             if (!motor_elevator.atTargetPosition()) {
                 // XXX why does this ever successfuly go "down" at all??
@@ -296,7 +296,7 @@ public class KiwiDrive extends OpMode {
             }
         }
         //claw controls
-        if (gamepadex2.wasJustPressed(GamepadKeys.Button.A)) {
+        if (gamepadex2.wasJustPressed(GamepadKeys.Button.A) || gamepadex2.wasJustPressed(GamepadKeys.Button.X)) {
             claw_position = !claw_position;
             if (claw_position == true) {  // closed
                 servo_claw_left.setPosition(0.00);
@@ -318,10 +318,10 @@ public class KiwiDrive extends OpMode {
         );
 
         // speed controls (percentage of max)
-        double max_speed = 0.30;
+        double max_speed = 0.37;
         if (gamepadex1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5){
             // if left-trigger "pressed"
-            max_speed = 0.40;
+            max_speed = 0.42;
         } else if (gamepadex1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
             // if ONLY right-trigger "pressed"
             max_speed = 0.65;
