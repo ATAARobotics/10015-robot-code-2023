@@ -112,10 +112,10 @@ public class DriveBase extends Object {
         telemetry.addData("mode", mode);
 
         // speed controls (percentage of max)
-        double max_speed = 0.37;
+        double max_speed = 0.40;
         if (gamepadex.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5){
             // if left-trigger "pressed"
-            max_speed = 0.42;
+            max_speed = 0.45;
         } else if (gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
             // if ONLY right-trigger "pressed"
             max_speed = 0.65;
