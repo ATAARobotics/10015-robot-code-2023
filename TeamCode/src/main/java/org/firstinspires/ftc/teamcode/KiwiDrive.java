@@ -117,7 +117,10 @@ public class KiwiDrive extends OpMode {
             );
         }
 
-        // let FTCLib updates it's button status
+        // let FTCLib updates its button status
+        // VERY IMPORTANT: only do this _once_ per loop (e.g. not in
+        // do_drive_updates()) because otherwise the notion of
+        // "wasJustPressed" is wrong
         gamepadex1.readButtons();
         gamepadex2.readButtons();
 
