@@ -109,8 +109,6 @@ public class DriveBase extends Object {
     // call this repeatedly from the OpMode.loop() function to "do"
     // the drive stuff from the given controller
     public void do_drive_updates(GamepadEx gamepadex, Telemetry telemetry) {
-        // let FTCLib updates its button status (probably done in parent, but ...)
-        gamepadex.readButtons();
         telemetry.addData("mode", mode);
 
         // speed controls (percentage of max)

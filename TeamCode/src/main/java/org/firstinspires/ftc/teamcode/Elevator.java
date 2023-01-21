@@ -72,9 +72,6 @@ public class Elevator extends Object {
     }
 
     public void do_elevator_updates(GamepadEx gamepadex, Telemetry telemetry) {
-        // let FTCLib updates it's button status
-        gamepadex.readButtons();
-
         // Elevator Controls
         elevator_position = motor_elevator.getCurrentPosition();
         double elevator_speed = 0.65;
@@ -160,10 +157,12 @@ public class Elevator extends Object {
         if (gamepadex.wasJustPressed(GamepadKeys.Button.A) || gamepadex.wasJustPressed(GamepadKeys.Button.X)) {
             claw_position = !claw_position;
             if (claw_position == true) {  // closed
+                telemetry.addData("claw position", "open");
                 servo_claw_left.setPosition(0.00);
                 servo_claw_right.setPosition(1.00);
                 //motor_elevator.set(0.5)for 1 second?
             } else { // must be false (open)
+                telemetry.addData("claw position", "closed");
                 servo_claw_left.setPosition(1.0);
                 servo_claw_right.setPosition(0.0);
             }
