@@ -257,35 +257,46 @@ public class KiwiDrive extends OpMode {
             }
         } else {
             // manual elevator control
+            // setting the speed to0.05 counteracts the pull of gravity
             motor_elevator.setRunMode(Motor.RunMode.RawPower);
-            double right_stick = -gamepadex2.getRightY() * 0.8;
+            double left_stick = gamepadex2.getLeftY() * 1.0;
 //            if (gamepadex2.getLeftY() < 0.05 || gamepadex2.getLeftY() > 0.05) {
 //                right_stick = gamepadex2.getLeftY() * 0.5;
 //            }
-            if (right_stick > 0.05) {
+            if (left_stick > 0.05) {
+                motor_elevator.setRunMode(Motor.RunMode.RawPower);
                 if (motor_elevator.getCurrentPosition() < elevator_high_limit) {
-                    motor_elevator.set(elevator_speed * right_stick);
+                    motor_elevator.set(elevator_speed * left_stick);
                     telemetry.addData("elevator", "up");
                 }
-            } else if (right_stick < -0.05) {
+            } else if (left_stick < -0.05) {
+                motor_elevator.setRunMode(Motor.RunMode.RawPower);
                 if (motor_elevator.getCurrentPosition() > elevator_low_limit) {
                     // go really slow if we're close to the bottom
                     if (motor_elevator.getCurrentPosition() < 400) {
-                        motor_elevator.set(elevator_speed * right_stick * 0.1);
+                        motor_elevator.set(elevator_speed * left_stick * 0.2);
                     } else {
-                        motor_elevator.set(elevator_speed * right_stick * 0.3);
+                        motor_elevator.set(elevator_speed * left_stick * 0.2);
                     }
                     telemetry.addData("elevator","down");
                 }
             } else {
+                motor_elevator.setRunMode(Motor.RunMode.RawPower);
                 motor_elevator.set(0.0);
                 telemetry.addData("elevator","stop");
             }
         }
 
-
+        if (gamepadex2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) >0.5 || gamepadex2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
+            motor_elevator.setTargetPosition(200);
+            motor_elevator.setRunMode(Motor.RunMode.PositionControl);
+            if (!motor_elevator.atTargetPosition()) {
+                // XXX why does this ever successfuly go "down" at all??
+                motor_elevator.set(0.1);
+            }
+        }
         //claw controls
-        if (gamepadex2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN)) {
+        if (gamepadex2.wasJustPressed(GamepadKeys.Button.A)) {
             claw_position = !claw_position;
             if (claw_position == true) {  // closed
                 servo_claw_left.setPosition(0.00);
@@ -346,6 +357,7 @@ public class KiwiDrive extends OpMode {
 
         telemetry.update();
     }
+
     @Override
     public void stop() {
         // Executed once immediately after a user presses Stop (◼) on
