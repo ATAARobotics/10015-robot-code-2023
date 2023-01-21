@@ -145,6 +145,10 @@ public class Elevator extends Object {
             }
         }
 
+        // XXX note to self: charleigh request: right trigger is "hold
+        // at current position", left trigger is "hold at preset
+        // height of 380"
+
         if (gamepadex.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) >0.5 || gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
             motor_elevator.setTargetPosition(400);
             motor_elevator.setRunMode(Motor.RunMode.PositionControl);

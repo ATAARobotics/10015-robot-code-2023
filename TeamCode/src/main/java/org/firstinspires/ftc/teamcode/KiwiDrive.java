@@ -86,6 +86,11 @@ public class KiwiDrive extends OpMode {
         // Executed once immediately after a user presses Play (▶) on
         // the Driver Station
 
+        // XXX VITAL: for competition, the AUTONOMOUS mode code will do these
+        // reset calls -- DO NOT do them again here...
+
+        // but for practice, we leave it alone..
+
         // make sure robot starts at correct position
         drivebase.imu.resetYaw();
         // ensure we have "zero" at the bottom of our elevator
