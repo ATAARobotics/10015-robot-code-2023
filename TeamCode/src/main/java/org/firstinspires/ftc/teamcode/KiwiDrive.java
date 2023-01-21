@@ -40,7 +40,7 @@ import org.firstinspires.ftc.teamcode.DriveBase;
 import org.firstinspires.ftc.teamcode.Elevator;
 
 
-@TeleOp(name="Kiwi: OpMode", group="Opmode")
+@TeleOp(name="Kiwi: TeleOp", group="Opmode")
 public class KiwiDrive extends OpMode {
 
     private DriveBase drivebase = null;
