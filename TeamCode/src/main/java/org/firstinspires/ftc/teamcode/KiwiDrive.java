@@ -35,20 +35,14 @@ import com.arcrobotics.ftclib.gamepad.ButtonReader;
 import com.arcrobotics.ftclib.gamepad.TriggerReader;
 import com.arcrobotics.ftclib.controller.PIDController;
 
+import org.firstinspires.ftc.teamcode.DriveBase;
+
 @TeleOp(name="Kiwi: OpMode", group="Opmode")
 public class KiwiDrive extends OpMode {
-    // Declare OpMode motors.
-    private Motor motor_left = null;
-    private Motor motor_right = null;
-    private Motor motor_slide = null;
 
-    // Inertial Measurement Unit
-    private IMU imu = null;
+    private DriveBase drivebase = null;
 
     private ColorSensor colour = null;
-
-    // Holonomic Drive
-    private HDrive drive = null;
 
     // claw + elevator setup
     private Motor motor_elevator = null;
@@ -64,9 +58,6 @@ public class KiwiDrive extends OpMode {
 
     // time-tracking
     private double last_time = 0.0;
-
-    // controller-mode
-    private int mode = 2;  // default
 
     // setup for various controls
     private GamepadEx gamepadex1 = null;
@@ -88,42 +79,14 @@ public class KiwiDrive extends OpMode {
         telemetry.addData("status", "startup");
         telemetry.update();
 
-        // initialize IMU
-        IMU.Parameters imu_params = new IMU.Parameters(
-            new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
-            )
-        );
-        imu = hardwareMap.get(IMU.class, "imu");
-        imu.initialize(imu_params);
-
-        colour = hardwareMap.get(ColorSensor.class, "colour");
+        //colour = hardwareMap.get(ColorSensor.class, "colour");
 
         // initialize motors
-        motor_left = new Motor(hardwareMap, "left");
-        motor_right = new Motor(hardwareMap, "right");
-        motor_slide = new Motor(hardwareMap, "slide");
         motor_elevator = new Motor(hardwareMap, "hdelevator");
 
-        motor_left.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        motor_slide.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_elevator.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
-        if (true) {
-            motor_left.setRunMode(Motor.RunMode.VelocityControl);
-            motor_right.setRunMode(Motor.RunMode.VelocityControl);
-            motor_slide.setRunMode(Motor.RunMode.VelocityControl);
-        } else {
-            motor_left.setRunMode(Motor.RunMode.RawPower);
-            motor_right.setRunMode(Motor.RunMode.RawPower);
-            motor_slide.setRunMode(Motor.RunMode.RawPower);
-        }
         motor_elevator.setRunMode(Motor.RunMode.PositionControl);
-        motor_left.setInverted(false);
-        motor_right.setInverted(false);
-        motor_slide.setInverted(false);
         motor_elevator.setInverted(true); // so that "up" is positive for us
         motor_elevator.set(0);
         motor_elevator.setPositionCoefficient(0.02);
@@ -140,22 +103,8 @@ public class KiwiDrive extends OpMode {
         servo_claw_left.scaleRange(0.0, 1.0);
         servo_claw_right.scaleRange(0.0, 1.0);
 
-        // initialize holonomic drive
-
-        // first three arguments are the motors themselves, the next
-        // three numbers are 'angles' for the motors -- this is their
-        // mounting angle, relative to "0" being "forward"
-
-        // NOTE NOTE!
-        //    0. The angle "0" is straight ahead
-        //    1. Angles are "right-hand coordinate" so "20" means "20 degress counter-clockwise"
-        //    2. The motors ARE NOT IN counter-clockwise order! (you specify left, then right)
-        //    3. Most angles are in RADIANS internally in ftclib (including these)
-        drive = new HDrive(
-            motor_left, motor_right, motor_slide,
-            Math.toRadians(60), Math.toRadians(300), Math.toRadians(180)
-        );
-        drive.setMaxSpeed(0.50); // 0.0 to 1.0, percentage of "max"
+        // let the drivebase set itself up
+        drivebase = new DriveBase(hardwareMap);
 
         telemetry.addData("status", "initialized");
         telemetry.update();
@@ -173,7 +122,7 @@ public class KiwiDrive extends OpMode {
         // the Driver Station
 
         // make sure robot starts at correct position
-        imu.resetYaw();
+        drivebase.imu.resetYaw();
         motor_elevator.resetEncoder();
     }
 
@@ -205,19 +154,10 @@ public class KiwiDrive extends OpMode {
         gamepadex2.readButtons();
 
 
-        // left / right BUMPERs switch mode
-       // if (gamepadex1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-            //mode -= 1;
-       // } else if (gamepadex1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER)) {
-        //     mode += 1;
-        //}
-        //if (mode < 0) mode = 2;
-        //if (mode > 2) mode = 0;
-        telemetry.addData("mode", mode);
+        // Elevator Controls (move to separate class)
         elevator_position = motor_elevator.getCurrentPosition();
         double elevator_speed = 0.65;
 
-        // Elevator Controls (move to command?)
         double elevator_high_limit = 1575;
         double elevator_low_limit = 10;
         telemetry.addData("elevator-encoder", motor_elevator.getCurrentPosition());
@@ -317,43 +257,7 @@ public class KiwiDrive extends OpMode {
             )
         );
 
-        // speed controls (percentage of max)
-        double max_speed = 0.37;
-        if (gamepadex1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5){
-            // if left-trigger "pressed"
-            max_speed = 0.42;
-        } else if (gamepadex1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
-            // if ONLY right-trigger "pressed"
-            max_speed = 0.65;
-        }
-        drive.setMaxSpeed(max_speed);
-        telemetry.addData("max_speed", max_speed);
-
-        if (mode == 0) {
-            // simple at first: left-strick forward/back + turn
-            drive.driveRobotCentric(
-                0.0, // strafe speed
-                gamepad1.left_stick_y,  // forward/back (only) from left stick
-                gamepad1.right_stick_x / 2.0 // turn from right stick, but less input
-           );
-        } else if (mode == 1) {
-            drive.driveRobotCentric(
-                gamepad1.left_stick_x,
-                gamepad1.left_stick_y,
-                gamepad1.right_stick_x / 2.0
-            );
-        } else if (mode == 2) {
-            double heading = - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            telemetry.addData("heading", heading);
-
-            drive.driveFieldCentric(
-                gamepad1.left_stick_x,
-                gamepad1.left_stick_y,
-                // angelika likes backwards stick
-                -gamepad1.right_stick_x * 0.75,
-                heading
-            );
-        }
+        drivebase.do_drive_updates(gamepadex1, telemetry);
 
         telemetry.update();
     }
