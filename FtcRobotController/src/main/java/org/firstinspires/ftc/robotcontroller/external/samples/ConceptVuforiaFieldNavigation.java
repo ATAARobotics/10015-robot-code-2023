@@ -97,7 +97,7 @@ public class ConceptVuforiaFieldNavigation extends LinearOpMode {
      * and paste it in to your code on the next line, between the double quotes.
      */
     private static final String VUFORIA_KEY =
-            "AYRyZe3/////AAABmZfwyxHsakmnmOoEnQHDAwqA0V64WRWwBstfg0MyvZ03IcD58WZuV46LYqidXMJnTs7Bnkyt6xYWpFgGJ+HIEa6p03fpRfbPF43Kd6aDu93Ax0hqpKon50H3is1bX9peoUazy98OR34OaRUT8i7ZN+byBnRDVSDjn9X918OC3cr4NO6ryYGp8gDZldqK+VOtcRzo2kyK2sbqDQvEZtfd2EkXucf7s6uB+Cv2nnQL2wyz+BjP04TEfJcIoL1cuLiD366GNGNO90ua8cns9J+TlqRiyJOXnkAW6kZxZhDl2ciPQRfky+R6v1kScRxDOwl3NmLWw6VEO5d9mjE3u8t6CGQ9GP9EybBXLlYzuCTNDQvj";
+            " -- YOUR NEW VUFORIA KEY GOES HERE  --- ";
 
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here.  These are useful for the FTC competition field.
