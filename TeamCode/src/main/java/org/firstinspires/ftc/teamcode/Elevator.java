@@ -52,6 +52,9 @@ public class Elevator extends Object {
 
     //eleator position
     public int elevator_position = 0;
+    //are we holding a position?
+    private boolean hold_position = false;
+    private int hold_at_position = 0;
 
     public Elevator(HardwareMap hardwareMap) {
         // initialize motors
@@ -149,13 +152,29 @@ public class Elevator extends Object {
         // at current position", left trigger is "hold at preset
         // height of 380"
 
-        if (gamepadex.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) >0.5 || gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5) {
+        if (gamepadex.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) >0.5 ){
             motor_elevator.setTargetPosition(400);
             motor_elevator.setRunMode(Motor.RunMode.PositionControl);
             if (!motor_elevator.atTargetPosition()) {
                 // XXX why does this ever successfuly go "down" at all??
                 motor_elevator.set(0.1);
             }
+        }
+        if (gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
+            if (!hold_position) {
+                hold_position = true;
+                hold_at_position = elevator_position;
+            }
+            if (hold_position == true) {
+                motor_elevator.setTargetPosition(hold_at_position);
+                motor_elevator.setRunMode(Motor.RunMode.PositionControl);
+                if (!motor_elevator.atTargetPosition()) {
+                    motor_elevator.set(0.15);
+                }
+            }
+        }
+        else {
+            hold_position = false;
         }
         //claw controls
         if (gamepadex.wasJustPressed(GamepadKeys.Button.A) || gamepadex.wasJustPressed(GamepadKeys.Button.X)) {

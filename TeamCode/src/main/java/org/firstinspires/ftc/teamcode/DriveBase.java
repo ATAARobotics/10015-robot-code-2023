@@ -41,7 +41,7 @@ import com.arcrobotics.ftclib.controller.PIDController;
 
 
 
-//
+// NOTE!!!we should make the robot go slow when the elevator is above xxx hight
 // this abstracts out the drive-related robot functions and motors to
 // be used by the KiwiDrive opmode and autonomous opmode
 //
@@ -56,6 +56,9 @@ public class DriveBase extends Object {
 
     // Holonomic Drive
     public HDrive drive = null;
+
+    //slow mode
+    private boolean slow = false;
 
     // controller-mode
     private int mode = 2;  // default
@@ -108,18 +111,24 @@ public class DriveBase extends Object {
 
     // call this repeatedly from the OpMode.loop() function to "do"
     // the drive stuff from the given controller
-    public void do_drive_updates(GamepadEx gamepadex, Telemetry telemetry) {
+    public void do_drive_updates(GamepadEx gamepadex, Telemetry telemetry, boolean slow_override) {
         telemetry.addData("mode", mode);
 
         // speed controls (percentage of max)
         double max_speed = 0.40;
-        if (gamepadex.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.5){
-            // if left-trigger "pressed"
-            max_speed = 0.45;
-        } else if (gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
-            // if ONLY right-trigger "pressed"
-            max_speed = 0.65;
+        if (gamepadex.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
+            slow = !slow;
+            if(slow == true) {
+                max_speed = 0.25;
+            }
         }
+        if (slow_override) {
+            max_speed = 0.25;
+        }
+        //else if (gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
+            // if ONLY right-trigger "pressed"
+            //max_speed = 0.65;
+        //}
         drive.setMaxSpeed(max_speed);
         telemetry.addData("max_speed", max_speed);
 
