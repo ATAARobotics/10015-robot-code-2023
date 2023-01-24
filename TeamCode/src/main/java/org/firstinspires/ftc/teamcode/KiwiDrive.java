@@ -113,14 +113,21 @@ public class KiwiDrive extends OpMode {
             int g = colour.green();
             int b = colour.blue();
             int max = Math.max(colour.alpha(), Math.max(b, Math.max(r, g)));
-            if (r == max) { detected_colour = "red"; }
-            if (g == max) { detected_colour = "green"; }
-            if (b == max) { detected_colour = "blue"; }
+            if (r == max) {
+                detected_colour = "red";
+            }
+            if (g == max) {
+                detected_colour = "green";
+            }
+            if (b == max) {
+                detected_colour = "blue";
+            }
             telemetry.addData(
-                "colour",
-                String.format("colour: red=%d green=%d blue=%d max=%d detected=%s", r, g, b, max, detected_colour)
+                    "colour",
+                    String.format("colour: red=%d green=%d blue=%d max=%d detected=%s", r, g, b, max, detected_colour)
             );
         }
+
 
         // let FTCLib updates its button status
         // VERY IMPORTANT: only do this _once_ per loop (e.g. not in
@@ -130,7 +137,13 @@ public class KiwiDrive extends OpMode {
         gamepadex2.readButtons();
 
         // tie controllers through to components
-        drivebase.do_drive_updates(gamepadex1, telemetry);
+        boolean slow_override = false;
+
+        //toggle the slow overide
+        if (elevator.motor_elevator.getCurrentPosition() > 800) {
+            slow_override = true;
+        }
+        drivebase.do_drive_updates(gamepadex1, telemetry, slow_override);
         elevator.do_elevator_updates(gamepadex2, telemetry);
 
         telemetry.update();
