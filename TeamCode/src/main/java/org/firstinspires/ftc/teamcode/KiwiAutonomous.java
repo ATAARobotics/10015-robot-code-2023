@@ -6,6 +6,7 @@ import com.arcrobotics.ftclib.gamepad.TriggerReader;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -14,6 +15,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -47,6 +49,8 @@ public class KiwiAutonomous extends OpMode {
     private Elevator elevator = null;
 
     private ColorSensor colour = null;
+    private DistanceSensor distance = null;
+    private String found_colour = "unknown";
 
     // time-tracking
     private double last_time = 0.0;
@@ -61,6 +65,9 @@ public class KiwiAutonomous extends OpMode {
         telemetry.update();
 
         colour = hardwareMap.get(ColorSensor.class, "colour");
+        colour.enableLed(true);
+
+        distance = hardwareMap.get(DistanceSensor.class, "colour");
 
         // let the drivebase set itself up
         drivebase = new DriveBase(hardwareMap);
@@ -116,32 +123,80 @@ public class KiwiAutonomous extends OpMode {
         telemetry.addData("time", time);
 
         String detected_colour = update_colour();
+        double heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        double distance_mm = distance.getDistance(DistanceUnit.MM);
 
+        // check and set states
         if (state == "start") {
             state = "ahead_slow";
-            next_time = time + 0.5;
+            next_time = time + 1.0;
         } else if (state == "ahead_slow" && time >= next_time) {
             state = "turn";
+        } else if (state == "strafe" && time >= next_time) {
+            drivebase.motor_left.set(0.0);
+            drivebase.motor_right.set(0.0);
+            drivebase.motor_slide.set(0.0);
+            state = "find_colour";
+            next_time = next_time + 5.0;
+        } else if (state == "find_color" && time >= next_time) {
+            state = "done";
+            // this is bad; we timed out finding the colour!
         }
 
-        double heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        telemetry.addData("state", state);
+        telemetry.addData("time", time);
+        telemetry.addData("next_time", next_time);
+        telemetry.addData("heading", heading);
+        telemetry.addData("distance", distance_mm);
+        telemetry.addData("found_colour", found_colour);
 
+        // act on our current state
         if (state == "ahead_slow" && time < next_time) {
             drivebase.drive.driveFieldCentric(
                 0.0,
-                0.2,
+                -0.5,
                 0.0,
                 heading
             );
         }
         if (state == "turn") {
-            if (heading < 60.0) {
+            if (heading > -89.0) {
                 drivebase.drive.driveFieldCentric(
-                    0.2,
-                    0.2,
                     0.0,
+                    0.0,
+                    -0.20,
                     heading
                 );
+            } /*else if (heading < -88.0) {
+                drivebase.drive.driveFieldCentric(
+                    0.0,
+                    0.0,
+                    0.20,
+                    heading
+                );
+            } */else {
+                state = "strafe";
+                next_time = time + 0.35;
+            }
+        }
+        if (state == "strafe" && time < next_time) {
+            drivebase.drive.driveFieldCentric(
+                -0.5,
+                0.0,
+                0.0,
+                heading
+            );
+        }
+        if (state == "find_colour") {
+            drivebase.drive.driveFieldCentric(
+                0.0,
+                -0.40,
+                0.0,
+                heading
+            );
+            if (distance_mm < 15) {
+                found_colour = detected_colour;
+                state = "park";
             }
         }
 
@@ -155,5 +210,6 @@ public class KiwiAutonomous extends OpMode {
     public void stop() {
         // Executed once immediately after a user presses Stop (◼) on
         // the Driver Station
+        colour.enableLed(false);
     }
 }
