@@ -4,6 +4,7 @@ import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.ToggleButtonReader;
 import com.arcrobotics.ftclib.gamepad.TriggerReader;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -42,7 +43,7 @@ import org.firstinspires.ftc.teamcode.DriveBase;
 import org.firstinspires.ftc.teamcode.Elevator;
 
 
-@TeleOp(name="Kiwi: Autonomous", group="Opmode")
+@Autonomous(name="Kiwi: Autonomous", group="Autonomous")
 public class KiwiAutonomous extends OpMode {
 
     private DriveBase drivebase = null;
@@ -112,6 +113,15 @@ public class KiwiAutonomous extends OpMode {
         return detected_colour;
     }
 
+    private void ensure_stop(double heading) {
+        /// ideally shouldn't need this, but .. here we are
+        drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
+        drivebase.motor_left.set(0.0);
+        drivebase.motor_right.set(0.0);
+        drivebase.motor_slide.set(0.0);
+    }
+
+
     @Override
     public void loop() {
         // Executed repeatedly after a user presses Play (▶) but
@@ -137,10 +147,13 @@ public class KiwiAutonomous extends OpMode {
             drivebase.motor_right.set(0.0);
             drivebase.motor_slide.set(0.0);
             state = "find_colour";
-            next_time = next_time + 5.0;
-        } else if (state == "find_color" && time >= next_time) {
+            next_time = time + 3.0;
+        } else if (state == "find_colour" && time >= next_time) {
             state = "done";
             // this is bad; we timed out finding the colour!
+        } else if (state == "park_fwd" && time >= next_time) {
+            state = "park";
+            next_time = time + 2.0;
         }
 
         telemetry.addData("state", state);
@@ -176,7 +189,7 @@ public class KiwiAutonomous extends OpMode {
                 );
             } */else {
                 state = "strafe";
-                next_time = time + 0.35;
+                next_time = time + 0.25;
             }
         }
         if (state == "strafe" && time < next_time) {
@@ -194,9 +207,44 @@ public class KiwiAutonomous extends OpMode {
                 0.0,
                 heading
             );
-            if (distance_mm < 15) {
+            if (distance_mm < 12 && detected_colour != "unknown") {
+                // make sure we're stopped; FIXME why we need to do this?
+                ensure_stop(heading);
                 found_colour = detected_colour;
-                state = "park";
+                state = "park_fwd";
+                next_time = time + 0.5;
+
+                // red == strafe west / "left"
+                // green == move north slightly
+                // blue == strafe east / "right"
+            }
+        }
+        if (state == "park_fwd") {
+            drivebase.drive.driveFieldCentric(
+                0.0,
+                -0.40,
+                0.0,
+                heading
+            );
+        }
+        if (state == "park") {
+            if (found_colour == "green") {
+                state = "done";
+                ensure_stop(heading);
+            } else if (found_colour == "blue") {
+                drivebase.drive.driveFieldCentric(
+                    0.0,
+                    -0.40,
+                    0.0,
+                    heading
+                );
+            } else if (found_colour == "red") {
+                drivebase.drive.driveFieldCentric(
+                    0.0,
+                    0.40,
+                    0.0,
+                    heading
+                );
             }
         }
 
