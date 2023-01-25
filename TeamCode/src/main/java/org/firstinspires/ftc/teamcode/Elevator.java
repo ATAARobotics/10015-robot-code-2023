@@ -74,6 +74,14 @@ public class Elevator extends Object {
         servo_claw_right.scaleRange(0.0, 1.0);
     }
 
+    public void close_claw() {
+        servo_claw_left.setPosition(0.00);
+        servo_claw_right.setPosition(1.00);
+    }
+    public void open_claw() {
+        servo_claw_left.setPosition(1.0);
+        servo_claw_right.setPosition(0.0);
+    }
     public void do_elevator_updates(GamepadEx gamepadex, Telemetry telemetry) {
         // Elevator Controls
         elevator_position = motor_elevator.getCurrentPosition();
@@ -181,13 +189,11 @@ public class Elevator extends Object {
             claw_position = !claw_position;
             if (claw_position == true) {  // closed
                 telemetry.addData("claw position", "open");
-                servo_claw_left.setPosition(0.00);
-                servo_claw_right.setPosition(1.00);
+                close_claw();
                 //motor_elevator.set(0.5)for 1 second?
             } else { // must be false (open)
                 telemetry.addData("claw position", "closed");
-                servo_claw_left.setPosition(1.0);
-                servo_claw_right.setPosition(0.0);
+                open_claw();
             }
         }
         telemetry.addData(

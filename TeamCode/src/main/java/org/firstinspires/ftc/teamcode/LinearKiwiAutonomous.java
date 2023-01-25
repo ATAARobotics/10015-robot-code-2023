@@ -116,8 +116,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         drivebase.imu.resetYaw();
         // ensure we have "zero" at the bottom of our elevator
         elevator.motor_elevator.resetEncoder();
-
-
+        elevator.close_claw();
         //
         // main logic loop
         //
@@ -222,10 +221,10 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         } else {
             iterations = 45; // red or blue
             if (detected_colour == "red") {
-                stick_x = 0.4;
+                stick_x = -0.4;
             } else {
                 // must be blue
-                stick_x = -0.4;
+                stick_x = 0.4;
             }
         }
 
