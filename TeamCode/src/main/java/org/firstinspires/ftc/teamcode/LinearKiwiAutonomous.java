@@ -125,7 +125,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         double heading = 0.0;
 
         // drive ahead, slowly, for a little while
-        int iterations = 15;
+        int iterations = 18;
         while (iterations > 0) {
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             drivebase.drive.driveFieldCentric(
@@ -152,11 +152,11 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
 
         // strafe "left" a little
-        iterations = 10;
+        iterations = 8;
         while (iterations > 0) {
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             drivebase.drive.driveFieldCentric(
-                -0.5,
+                -0.3,
                 0.0,
                 0.0,
                 heading
@@ -164,5 +164,87 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             sleep(25);
             --iterations;
         }
+
+        // drive towards the cone
+        iterations = 20;
+        while (iterations > 0) {
+            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            drivebase.drive.driveFieldCentric(
+                0.0,
+                -0.40,
+                0.0,
+                heading
+            );
+            --iterations;
+            sleep(25);
+        }
+        ensure_stop(heading);
+
+        // "take in the colours" for a while (filter them)
+        iterations = 100;
+        int red = 0;
+        int green = 0;
+        int blue = 0;
+        while (iterations > 0) {
+            red += colour.red();
+            green += colour.green();
+            blue += colour.blue();
+
+            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            drivebase.drive.driveFieldCentric(
+                0.0,
+                0.0,
+                0.0,
+                heading
+            );
+
+            sleep(20);
+            --iterations;
+        }
+
+        int max = Math.max(red, Math.max(green, blue));
+        String detected_colour = "unknown";
+        if (red == max) detected_colour = "red";
+        if (green == max) detected_colour = "green";
+        if (blue == max) detected_colour = "blue";
+        telemetry.addData("detected", detected_colour);
+        telemetry.update();
+
+        // now, do something based on the colour:
+        // green: drive forward a little
+        // red/blue: drive "left" / "right"
+
+        double stick_x = 0.0;
+        double stick_y = 0.0;
+        if (detected_colour == "green") {
+            iterations = 10;
+            stick_y = -0.4;
+        } else {
+            iterations = 45; // red or blue
+            if (detected_colour == "red") {
+                stick_x = 0.4;
+            } else {
+                // must be blue
+                stick_x = -0.4;
+            }
+        }
+
+        // XXX actually, probably better to loop in these "as fast as
+        // possible" and use global time as the limit? (more feedback
+        // to the controller)
+        while (iterations > 0) {
+            --iterations;
+            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            drivebase.drive.driveFieldCentric(
+                stick_x,
+                stick_y,
+                0.0,
+                heading
+            );
+            sleep(25);
+        }
+
+        // done
+        ensure_stop(heading);
     }
 }
