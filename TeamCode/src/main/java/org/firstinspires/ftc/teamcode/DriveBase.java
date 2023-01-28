@@ -115,20 +115,20 @@ public class DriveBase extends Object {
         telemetry.addData("mode", mode);
 
         // speed controls (percentage of max)
-        double max_speed = 0.40;
+        double max_speed = 0.45;
         if (gamepadex.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
             slow = !slow;
-            if(slow == true) {
-                max_speed = 0.25;
-            }
+        }
+        if (slow == true) {
+            max_speed = 0.30;
         }
         if (slow_override) {
-            max_speed = 0.25;
+            max_speed = 0.30;
         }
-        //else if (gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
+        else if (gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
             // if ONLY right-trigger "pressed"
-            //max_speed = 0.65;
-        //}
+            max_speed = 0.65;
+        }
         drive.setMaxSpeed(max_speed);
         telemetry.addData("max_speed", max_speed);
 

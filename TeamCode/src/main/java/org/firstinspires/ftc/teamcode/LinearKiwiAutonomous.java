@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.ToggleButtonReader;
 import com.arcrobotics.ftclib.gamepad.TriggerReader;
@@ -54,21 +57,6 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     private DistanceSensor distance = null;
     private String found_colour = "unknown";
 
-    private String update_colour() {
-        String detected_colour = "unknown";
-        int r = colour.red();
-        int g = colour.green();
-        int b = colour.blue();
-        int max = Math.max(colour.alpha(), Math.max(b, Math.max(r, g)));
-        if (r == max) { detected_colour = "red"; }
-        if (g == max) { detected_colour = "green"; }
-        if (b == max) { detected_colour = "blue"; }
-        telemetry.addData(
-            "colour",
-            String.format("colour: red=%d green=%d blue=%d max=%d detected=%s", r, g, b, max, detected_colour)
-        );
-        return detected_colour;
-    }
 
     private void ensure_stop(double heading) {
         /// ideally shouldn't need this, but .. here we are
@@ -76,6 +64,105 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         drivebase.motor_left.set(0.0);
         drivebase.motor_right.set(0.0);
         drivebase.motor_slide.set(0.0);
+    }
+
+    public class Action {
+        public double start_time = -1.0;
+
+        public void do_drive(double heading, DriveBase drivebase) {
+            drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
+        }
+
+        public void do_elevator(Elevator elevator) {
+        }
+
+        public boolean is_done(double time) {
+            return false;
+        }
+    }
+
+    public class DriveAction extends Action {
+        public double stick_x = 0.0;
+        public double stick_y = 0.0;
+        public double turn = 0.0;
+        public double duration = 0.0;
+
+        public DriveAction(double x, double y, double t, double dur) {
+            stick_x = x;
+            stick_y = y;
+            turn = t;
+            duration = dur;
+        }
+
+        public void do_drive(double heading, DriveBase drivebase) {
+            drivebase.drive.driveFieldCentric(stick_x, stick_y, turn, heading);
+        }
+
+        public boolean is_done(double time) {
+            if ((time - start_time) > duration) {
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public class TurnAction extends Action {
+        public double stick_x = 0.0;
+        public double stick_y = 0.0;
+        public double turn = 0.0;
+        public double target_heading = 0.0;
+        public boolean done = false;
+
+        public TurnAction(double t, double target) {
+            stick_x = 0.0;
+            stick_y = 0.0;
+            turn = t;
+            target_heading = target;
+        }
+
+        public void do_drive(double heading, DriveBase drivebase) {
+            drivebase.drive.driveFieldCentric(stick_x, stick_y, turn, heading);
+            if (heading < target_heading) {
+                done = true;
+            }
+        }
+
+        public boolean is_done(double time) {
+            return done;
+        }
+    }
+
+    public class DetectColourAction extends Action {
+        public double duration = 0.0;
+        public LinearKiwiAutonomous auto = null;
+        int r = 0;
+        int g = 0;
+        int b = 0;
+
+        public DetectColourAction(LinearKiwiAutonomous a, double d) {
+            duration = d;
+            auto = a;
+        }
+
+        public void do_drive(double heading, DriveBase drivebase) {
+            drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
+            r += auto.colour.red();
+            g += auto.colour.green();
+            b += auto.colour.blue();
+        }
+
+        public boolean is_done(double time) {
+            if ((time - start_time) > duration) {
+                int max = Math.max(r, Math.max(g, b));
+                String detected_colour = "unknown";
+                if (r == max) detected_colour = "red";
+                if (g == max) detected_colour = "green";
+                if (b == max) detected_colour = "blue";
+                auto.found_colour = detected_colour;
+                return true;
+            }
+            return false;
+        }
     }
 
 
@@ -118,132 +205,56 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         elevator.motor_elevator.resetEncoder();
         elevator.close_claw();
 
-        sleep(500);
+        sleep(1500);
 
         //
         // main logic loop
         //
 
+        List<Action> todo = new ArrayList<Action>();
+
         double heading = 0.0;
 
         // drive ahead, slowly, for a little while
-        int iterations = 20;
-        while (iterations > 0) {
-            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            drivebase.drive.driveFieldCentric(
-                0.0,
-                -0.5,
-                0.0,
-                heading
-            );
-            sleep(25);
-            --iterations;
-        }
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0)); // ahead
+        todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
+        todo.add(new DriveAction(-0.4, 0.0, 0.0, 1.5)); // strafe a bit
+        todo.add(new DriveAction(0.0, -0.40, 0.0, 2.0));  // drive to cone
+        todo.add(new DetectColourAction(this, 1.600));
 
-        // turn until we're about 90 degrees
-        while (heading > -89.0) {
-            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            drivebase.drive.driveFieldCentric(
-                0.0,
-                0.0,
-                -0.2,
-                heading
-            );
-            sleep(25);
-            --iterations;
-        }
-
-        // strafe "left" a little
-        iterations = 9;
-        while (iterations > 0) {
-            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            drivebase.drive.driveFieldCentric(
-                -0.3,
-                0.0,
-                0.0,
-                heading
-            );
-            sleep(25);
-            --iterations;
-        }
-
-        // drive towards the cone
-        iterations = 30;
-        while (iterations > 0) {
-            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            drivebase.drive.driveFieldCentric(
-                0.0,
-                -0.40,
-                0.0,
-                heading
-            );
-            --iterations;
-            sleep(20);
-        }
-        ensure_stop(heading);
-
-        // "take in the colours" for a while (filter them)
-        iterations = 80;
-        int red = 0;
-        int green = 0;
-        int blue = 0;
-        while (iterations > 0) {
-            red += colour.red();
-            green += colour.green();
-            blue += colour.blue();
-
-            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            drivebase.drive.driveFieldCentric(
-                0.0,
-                0.0,
-                0.0,
-                heading
-            );
-
-            sleep(20);
-            --iterations;
-        }
-
-        int max = Math.max(red, Math.max(green, blue));
-        String detected_colour = "unknown";
-        if (red == max) detected_colour = "red";
-        if (green == max) detected_colour = "green";
-        if (blue == max) detected_colour = "blue";
-        telemetry.addData("detected", detected_colour);
-        telemetry.update();
-
-        // now, do something based on the colour:
-        // green: drive forward a little
-        // red/blue: drive "left" / "right"
-
-        double stick_x = 0.0;
-        double stick_y = 0.0;
-        if (detected_colour == "green") {
-            iterations = 20;
-            stick_y = -0.5;
-        } else {
-            iterations = 90; // red or blue
-            if (detected_colour == "red") {
-                stick_x = -0.5;
-            } else {
-                // must be blue
-                stick_x = 0.5;
+        while (!todo.isEmpty() && opModeIsActive()) {
+            telemetry.addData("todo", todo.size());
+            Action doing = todo.get(0);
+            todo.remove(doing);
+            doing.start_time = time;
+            while (!doing.is_done(time) && opModeIsActive()) {
+                heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+                doing.do_drive(heading, drivebase);
+                telemetry.addData("start_time", doing.start_time);
+                telemetry.addData("time", time);
+                telemetry.addData("heading", heading);
+                telemetry.update();
             }
         }
 
-        // XXX actually, probably better to loop in these "as fast as
-        // possible" and use global time as the limit? (more feedback
-        // to the controller)
-        while (iterations > 0) {
-            --iterations;
-            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            drivebase.drive.driveFieldCentric(
-                stick_x,
-                stick_y,
-                0.0,
-                heading
-            );
-            sleep(25);
+        telemetry.addData("colour", found_colour);
+        telemetry.update();
+        if (found_colour == "green") {
+            todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0));
+        } else if (found_colour == "red") {
+            todo.add(new DriveAction(-0.5, 0.0, 0.0, 3.0));
+        } else { // blue
+            todo.add(new DriveAction(0.5, 0.0, 0.0, 3.0));
+        }
+
+        while (!todo.isEmpty() && opModeIsActive()) {
+            Action doing = todo.get(0);
+            todo.remove(doing);
+            doing.start_time = time;
+            while (!doing.is_done(time)) {
+                heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+                doing.do_drive(heading, drivebase);
+            }
         }
 
         // done

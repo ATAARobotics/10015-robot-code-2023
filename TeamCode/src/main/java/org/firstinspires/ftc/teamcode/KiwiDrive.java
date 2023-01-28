@@ -91,7 +91,7 @@ public class KiwiDrive extends OpMode {
 
         // but for practice, we leave it alone..
 
-        if (false) {
+        if (gamepadex1.isDown(GamepadKeys.Button.A) || gamepadex1.isDown(GamepadKeys.Button.X)) {
             // make sure robot starts at correct position
             drivebase.imu.resetYaw();
             // ensure we have "zero" at the bottom of our elevator

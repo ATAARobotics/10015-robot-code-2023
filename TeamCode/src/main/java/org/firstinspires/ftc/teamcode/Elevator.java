@@ -143,7 +143,7 @@ public class Elevator extends Object {
                 if (motor_elevator.getCurrentPosition() > elevator_low_limit) {
                     // go really slow if we're close to the bottom
                     if (motor_elevator.getCurrentPosition() < 400) {
-                        motor_elevator.set(elevator_speed * left_stick * 0.2);
+                        motor_elevator.set(elevator_speed * left_stick * 0.1);
                     } else {
                         motor_elevator.set(elevator_speed * left_stick * 0.2);
                     }
