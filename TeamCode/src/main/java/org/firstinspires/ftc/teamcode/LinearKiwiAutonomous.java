@@ -117,6 +117,9 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         // ensure we have "zero" at the bottom of our elevator
         elevator.motor_elevator.resetEncoder();
         elevator.close_claw();
+
+        sleep(500);
+
         //
         // main logic loop
         //
@@ -124,7 +127,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         double heading = 0.0;
 
         // drive ahead, slowly, for a little while
-        int iterations = 18;
+        int iterations = 20;
         while (iterations > 0) {
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             drivebase.drive.driveFieldCentric(
@@ -151,7 +154,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
 
         // strafe "left" a little
-        iterations = 8;
+        iterations = 9;
         while (iterations > 0) {
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             drivebase.drive.driveFieldCentric(
@@ -165,7 +168,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
 
         // drive towards the cone
-        iterations = 20;
+        iterations = 30;
         while (iterations > 0) {
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             drivebase.drive.driveFieldCentric(
@@ -175,12 +178,12 @@ public class LinearKiwiAutonomous extends LinearOpMode {
                 heading
             );
             --iterations;
-            sleep(25);
+            sleep(20);
         }
         ensure_stop(heading);
 
         // "take in the colours" for a while (filter them)
-        iterations = 100;
+        iterations = 80;
         int red = 0;
         int green = 0;
         int blue = 0;
@@ -216,15 +219,15 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         double stick_x = 0.0;
         double stick_y = 0.0;
         if (detected_colour == "green") {
-            iterations = 10;
-            stick_y = -0.4;
+            iterations = 20;
+            stick_y = -0.5;
         } else {
-            iterations = 45; // red or blue
+            iterations = 90; // red or blue
             if (detected_colour == "red") {
-                stick_x = -0.4;
+                stick_x = -0.5;
             } else {
                 // must be blue
-                stick_x = 0.4;
+                stick_x = 0.5;
             }
         }
 
