@@ -74,6 +74,9 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
 
         public void do_elevator(Elevator elevator) {
+            if (!elevator.motor_elevator.atTargetPosition()) {
+                elevator.motor_elevator.set(0.15);
+            }
         }
 
         public boolean is_done(double time) {
@@ -203,9 +206,13 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         drivebase.imu.resetYaw();
         // ensure we have "zero" at the bottom of our elevator
         elevator.motor_elevator.resetEncoder();
+        elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
+        elevator.open_claw();
+        sleep(1000);
         elevator.close_claw();
-
         sleep(1500);
+        elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
+        elevator.motor_elevator.setTargetPosition(300);
 
         //
         // main logic loop
@@ -218,8 +225,8 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         // drive ahead, slowly, for a little while
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0)); // ahead
         todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
-        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.4)); // strafe a bit
-        todo.add(new DriveAction(0.0, -0.40, 0.0, 2.0));  // drive to cone
+        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.30)); // strafe a bit
+        todo.add(new DriveAction(0.0, -0.40, 0.0, 2.3));  // drive to cone
         todo.add(new DetectColourAction(this, 1.6));
 
         while (!todo.isEmpty() && opModeIsActive()) {
@@ -230,6 +237,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             while (!doing.is_done(time) && opModeIsActive()) {
                 heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
                 doing.do_drive(heading, drivebase);
+                doing.do_elevator(elevator);
                 telemetry.addData("start_time", doing.start_time);
                 telemetry.addData("time", time);
                 telemetry.addData("heading", heading);
@@ -260,5 +268,12 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
         // done
         ensure_stop(heading);
+        elevator.motor_elevator.setTargetPosition(10);
+        while (!elevator.motor_elevator.atTargetPosition() && opModeIsActive()) {
+            // XXX why does this ever successfuly go "down" at all??
+            elevator.motor_elevator.set(0.15);
+        }
+        elevator.motor_elevator.setRunMode(Motor.RunMode.RawPower);
+        sleep(1500);
     }
 }
