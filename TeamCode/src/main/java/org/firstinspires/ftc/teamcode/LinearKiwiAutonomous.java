@@ -218,8 +218,8 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         // drive ahead, slowly, for a little while
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0)); // ahead
         todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
-        todo.add(new DriveAction(-0.4, 0.0, 0.0, 1.5)); // strafe a bit
-        todo.add(new DriveAction(0.0, -0.40, 0.0, 2.0));  // drive to cone
+        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.40)); // strafe a bit
+        todo.add(new DriveAction(0.0, -0.40, 0.0, 1.8));  // drive to cone
         todo.add(new DetectColourAction(this, 1.600));
 
         while (!todo.isEmpty() && opModeIsActive()) {
@@ -240,11 +240,12 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         telemetry.addData("colour", found_colour);
         telemetry.update();
         if (found_colour == "green") {
-            todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0));
+            todo.add(new DriveAction(0.0, -0.5, 0.0, 0.2));
         } else if (found_colour == "red") {
             todo.add(new DriveAction(-0.5, 0.0, 0.0, 3.0));
         } else { // blue
-            todo.add(new DriveAction(0.5, 0.0, 0.0, 3.0));
+            todo.add(new DriveAction(0.5, -0.5, 0.0, 0.4));
+            todo.add(new DriveAction(0.5, 0.0, 0.0, 2.5));
         }
 
         while (!todo.isEmpty() && opModeIsActive()) {
