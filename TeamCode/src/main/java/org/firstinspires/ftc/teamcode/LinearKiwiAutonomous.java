@@ -269,7 +269,8 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         // done
         ensure_stop(heading);
         elevator.motor_elevator.setTargetPosition(10);
-        while (!elevator.motor_elevator.atTargetPosition() && opModeIsActive()) {
+        double timeout = time + 2.0;
+        while (!elevator.motor_elevator.atTargetPosition() && opModeIsActive() && time < timeout) {
             // XXX why does this ever successfuly go "down" at all??
             elevator.motor_elevator.set(0.15);
         }
