@@ -52,6 +52,7 @@ public class MotorTests extends LinearOpMode {
 
     private DriveBase drivebase = null;
     private Elevator elevator = null;
+    private GamepadEx gamepadex1 = null;
 
     private ColorSensor colour = null;
     private DistanceSensor distance = null;
@@ -129,6 +130,9 @@ public class MotorTests extends LinearOpMode {
         // elevator setup
         elevator = new Elevator(hardwareMap);
 
+        // ust one controller
+        gamepadex1 = new GamepadEx(gamepad1);
+
         telemetry.addData("status", "initialized");
         telemetry.update();
 
@@ -154,6 +158,7 @@ public class MotorTests extends LinearOpMode {
         double slide_start = 0.0;
 
         while (opModeIsActive()) {
+            gamepadex1.readButtons();
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
             if (gamepadex1.isDown(GamepadKeys.Button.A)) {
