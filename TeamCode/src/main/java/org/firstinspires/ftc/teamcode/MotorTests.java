@@ -149,9 +149,49 @@ public class MotorTests extends LinearOpMode {
         elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
 
         double heading = 0.0;
+        double left_start = 0.0;
+        double right_start = 0.0;
+        double slide_start = 0.0;
 
         while (opModeIsActive()) {
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+
+            if (gamepadex1.isDown(GamepadKeys.Button.A)) {
+                if (gamepadex1.wasJustPressed(GamepadKeys.Button.A)) {
+                    left_start = time;
+                }
+                drivebase.motor_left.setRunMode(Motor.RunMode.RawPower);
+                // approach full power in 3 seconds
+                drivebase.motor_left.set(Math.min(1.0, (time - left_start) / 3.0));
+            } else {
+                drivebase.motor_left.setRunMode(Motor.RunMode.VelocityControl);
+                drivebase.motor_left.set(0.0);
+            }
+
+            if (gamepadex1.isDown(GamepadKeys.Button.B)) {
+                if (gamepadex1.wasJustPressed(GamepadKeys.Button.B)) {
+                    left_start = time;
+                }
+                drivebase.motor_right.setRunMode(Motor.RunMode.RawPower);
+                // approach full power in 3 seconds
+                drivebase.motor_right.set(Math.min(1.0, (time - right_start) / 3.0));
+            } else {
+                drivebase.motor_right.setRunMode(Motor.RunMode.VelocityControl);
+                drivebase.motor_right.set(0.0);
+            }
+
+            if (gamepadex1.isDown(GamepadKeys.Button.X)) {
+                if (gamepadex1.wasJustPressed(GamepadKeys.Button.X)) {
+                    slide_start = time;
+                }
+                drivebase.motor_slide.setRunMode(Motor.RunMode.RawPower);
+                // approach full power in 3 seconds
+                drivebase.motor_slide.set(Math.min(1.0, (time - slide_start) / 3.0));
+            } else {
+                drivebase.motor_slide.setRunMode(Motor.RunMode.VelocityControl);
+                drivebase.motor_slide.set(0.0);
+            }
+
             telemetry.addData("time", time);
             telemetry.addData("heading", heading);
             telemetry.addData(
@@ -160,6 +200,22 @@ public class MotorTests extends LinearOpMode {
             );
             telemetry.addData(
                 "left",
+                String.format(
+                    "position=%.2f encoder=%.2f",
+                    drivebase.motor_left.getCurrentPosition(),
+                    drivebase.motor_left.encoder.getPosition()
+                )
+            );
+            telemetry.addData(
+                "right",
+                String.format(
+                    "position=%.2f encoder=%.2f",
+                    drivebase.motor_left.getCurrentPosition(),
+                    drivebase.motor_left.encoder.getPosition()
+                )
+            );
+            telemetry.addData(
+                "slide",
                 String.format(
                     "position=%.2f encoder=%.2f",
                     drivebase.motor_left.getCurrentPosition(),
