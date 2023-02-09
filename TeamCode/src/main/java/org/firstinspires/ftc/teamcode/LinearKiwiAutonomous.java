@@ -45,7 +45,26 @@ import com.arcrobotics.ftclib.controller.PIDController;
 // our other classes, for 10015
 import org.firstinspires.ftc.teamcode.DriveBase;
 import org.firstinspires.ftc.teamcode.Elevator;
+import org.opencv.core.Mat;
+import org.opencv.objdetect.QRCodeDetector;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvInternalCamera;
+import org.openftc.easyopencv.OpenCvPipeline;
 
+class FindQrCodePipeline extends OpenCvPipeline
+{
+    public String found_name = "";
+    private QRCodeDetector qr = new QRCodeDetector();
+
+    @Override
+    public Mat processFrame(Mat input)
+    {
+        found_name = qr.detectAndDecode(input);
+        return input;
+    }
+}
 
 @Autonomous(name="Kiwi: Linear Autonomous", group="Autonomous")
 public class LinearKiwiAutonomous extends LinearOpMode {
@@ -55,7 +74,9 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
     private ColorSensor colour = null;
     private DistanceSensor distance = null;
-    private String found_colour = "unknown";
+    private String found_code = "none";
+
+    private OpenCvCamera camera = null;
 
 
     private void ensure_stop(double heading) {
@@ -138,9 +159,10 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     public class DetectColourAction extends Action {
         public double duration = 0.0;
         public LinearKiwiAutonomous auto = null;
-        int r = 0;
-        int g = 0;
-        int b = 0;
+        public String code = "unknown";
+        public boolean started = false;
+        FindQrCodePipeline pipeline = new FindQrCodePipeline();
+
 
         public DetectColourAction(LinearKiwiAutonomous a, double d) {
             duration = d;
@@ -149,19 +171,22 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
         public void do_drive(double heading, DriveBase drivebase) {
             drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
-            r += auto.colour.red();
-            g += auto.colour.green();
-            b += auto.colour.blue();
+            if (!started) {
+                started = true;
+                camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                camera.setPipeline(pipeline);
+            }
+            if (pipeline.found_name != ""){
+                code = pipeline.found_name;
+            }
         }
 
         public boolean is_done(double time) {
             if ((time - start_time) > duration) {
-                int max = Math.max(r, Math.max(g, b));
-                String detected_colour = "unknown";
-                if (r == max) detected_colour = "red";
-                if (g == max) detected_colour = "green";
-                if (b == max) detected_colour = "blue";
-                auto.found_colour = detected_colour;
+                return true;
+            }
+            if (code != "unknown") {
+                auto.found_code = code;
                 return true;
             }
             return false;
@@ -192,6 +217,8 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         telemetry.addData("status", "initialized");
         telemetry.update();
 
+        camera = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK);
+        camera.openCameraDevice();
         //
         // done setup wait for start
         //
@@ -225,9 +252,9 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         // drive ahead, slowly, for a little while
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0)); // ahead
         todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
-        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.30)); // strafe a bit
-        todo.add(new DriveAction(0.0, -0.40, 0.0, 2.3));  // drive to cone
-        todo.add(new DetectColourAction(this, 1.6));
+        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.50)); // strafe a bit
+        todo.add(new DriveAction(0.0, -0.40, 0.0, .5));  // drive to cone
+        todo.add(new DetectColourAction(this, 10.0));
 
         while (!todo.isEmpty() && opModeIsActive()) {
             telemetry.addData("todo", todo.size());
@@ -245,13 +272,13 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             }
         }
 
-        telemetry.addData("colour", found_colour);
+        telemetry.addData("colour", found_code);
         telemetry.update();
-        if (found_colour == "green") {
+        if (found_code == "2") {
             todo.add(new DriveAction(0.0, -0.5, 0.0, 0.2));
-        } else if (found_colour == "red") {
-            todo.add(new DriveAction(-0.5, 0.0, 0.0, 3.0));
-        } else { // blue
+        } else if (found_code == "1") {
+            todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.5));
+        } else if (found_code == "3") { // blue
             todo.add(new DriveAction(0.5, -0.5, 0.0, 0.4));
             todo.add(new DriveAction(0.5, 0.0, 0.0, 2.5));
         }

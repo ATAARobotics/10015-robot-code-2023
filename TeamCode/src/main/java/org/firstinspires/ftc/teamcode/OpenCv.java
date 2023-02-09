@@ -188,8 +188,6 @@ public class OpenCv extends LinearOpMode {
 
         // note, synchronous open (can do async instead, then we don't block here)
         camera.openCameraDevice();
-        //camera.startStreaming(1920, 1080, OpenCvCameraRotation.SIDEWAYS_LEFT);
-        //camera.startStreaming(640, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
         camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
         FindQrCodePipeline pipeline = new FindQrCodePipeline();
         camera.setPipeline(pipeline);
