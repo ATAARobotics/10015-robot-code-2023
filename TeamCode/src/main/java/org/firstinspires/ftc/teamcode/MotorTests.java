@@ -130,8 +130,16 @@ public class MotorTests extends LinearOpMode {
         // elevator setup
         elevator = new Elevator(hardwareMap);
 
-        // ust one controller
+        // just one controller
         gamepadex1 = new GamepadEx(gamepad1);
+
+        drivebase.motor_left.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        drivebase.motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        drivebase.motor_slide.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        drivebase.motor_left.resetEncoder();
+        drivebase.motor_right.resetEncoder();
+        drivebase.motor_slide.resetEncoder();
+
 
         telemetry.addData("status", "initialized");
         telemetry.update();
@@ -145,6 +153,10 @@ public class MotorTests extends LinearOpMode {
         //
         // start has been pressed
         //
+
+        // left  0 = 4, turn CW 1 rev: -289     (-293)
+        // slide 1 = -185, turn CW 1 rev: -479  (-293)
+        // right 2 = 22, turn CW 1 rev: 273     (-294?)
 
         // make sure robot starts at correct position
         drivebase.imu.resetYaw();
@@ -175,7 +187,7 @@ public class MotorTests extends LinearOpMode {
 
             if (gamepadex1.isDown(GamepadKeys.Button.B)) {
                 if (gamepadex1.wasJustPressed(GamepadKeys.Button.B)) {
-                    left_start = time;
+                    right_start = time;
                 }
                 drivebase.motor_right.setRunMode(Motor.RunMode.RawPower);
                 // approach full power in 3 seconds
@@ -201,30 +213,30 @@ public class MotorTests extends LinearOpMode {
             telemetry.addData("heading", heading);
             telemetry.addData(
                 "colour",
-                String.format("r=%.2f g=%.2f b=%.2f", colour.red(), colour.green(), colour.blue())
+                String.format("r=%d g=%d b=%d", colour.red(), colour.green(), colour.blue())
             );
             telemetry.addData(
                 "left",
                 String.format(
-                    "position=%.2f encoder=%.2f",
-                    drivebase.motor_left.getCurrentPosition(),
+                    "position=%.2f encoder=%d",
+                    drivebase.motor_left.getCorrectedVelocity(),
                     drivebase.motor_left.encoder.getPosition()
                 )
             );
             telemetry.addData(
                 "right",
                 String.format(
-                    "position=%.2f encoder=%.2f",
-                    drivebase.motor_left.getCurrentPosition(),
-                    drivebase.motor_left.encoder.getPosition()
+                    "position=%.2f encoder=%d",
+                    drivebase.motor_right.getCorrectedVelocity(),
+                    drivebase.motor_right.encoder.getPosition()
                 )
             );
             telemetry.addData(
                 "slide",
                 String.format(
-                    "position=%.2f encoder=%.2f",
-                    drivebase.motor_left.getCurrentPosition(),
-                    drivebase.motor_left.encoder.getPosition()
+                    "position=%.2f encoder=%d",
+                    drivebase.motor_slide.getCorrectedVelocity(),
+                    drivebase.motor_slide.encoder.getPosition()
                 )
             );
             telemetry.update();

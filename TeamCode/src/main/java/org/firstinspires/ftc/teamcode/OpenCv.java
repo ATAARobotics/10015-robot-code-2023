@@ -164,8 +164,9 @@ public class OpenCv extends LinearOpMode {
         //
         // OpenCV stuff
         //
+        //int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        //OpenCvCamera camera = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
         OpenCvCamera camera = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK);
-        OpenCvCamera camera2 = OpenCvCameraFactory.getInstance().createInternalCamera2(OpenCvInternalCamera2.CameraDirection.BACK);
 
         class FindQrCodePipeline extends OpenCvPipeline
         {
@@ -176,22 +177,30 @@ public class OpenCv extends LinearOpMode {
             @Override
             public Mat processFrame(Mat input)
             {
-                found_name = qr.detectAndDecode(input);
+                String result = qr.detectAndDecode(input);
+                if (result != "") {
+                    found_name = result;
+                    found_qr = true;
+                }
                 return input;
             }
         }
 
         // note, synchronous open (can do async instead, then we don't block here)
         camera.openCameraDevice();
-        camera.startStreaming(1920, 1080, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        //camera.startStreaming(1920, 1080, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        //camera.startStreaming(640, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
         FindQrCodePipeline pipeline = new FindQrCodePipeline();
         camera.setPipeline(pipeline);
+
+        String the_code = "";
 
         while(opModeIsActive()) {
             telemetry.addData(
                 "camera",
                 String.format(
-                    "fps=%.2f frametime=%.2f ms ",
+                    "fps=%.2f frametime=%d ms ",
                     camera.getFps(),
                     camera.getTotalFrameTimeMs()
                 )
