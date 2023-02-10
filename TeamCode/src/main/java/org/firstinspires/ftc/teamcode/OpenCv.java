@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.openftc.easyopencv.OpenCvInternalCamera2.*;
+import static java.lang.System.*;
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -29,6 +32,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.opencv.core.Mat;
 import org.opencv.objdetect.QRCodeDetector;
 import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvInternalCamera2;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
@@ -56,7 +60,7 @@ import org.firstinspires.ftc.teamcode.DriveBase;
 import org.firstinspires.ftc.teamcode.Elevator;
 
 
-@Autonomous(name="Open CV", group="Autonomous")
+@TeleOp(name="Open CV", group="Testing")
 public class OpenCv extends LinearOpMode {
 
     private DriveBase drivebase = null;
@@ -65,7 +69,8 @@ public class OpenCv extends LinearOpMode {
 
     private ColorSensor colour = null;
     private DistanceSensor distance = null;
-    private String found_colour = "unknown";
+    public String the_code = null;
+
 
 
     private void ensure_stop(double heading) {
@@ -146,6 +151,24 @@ public class OpenCv extends LinearOpMode {
         telemetry.update();
 
         //
+        // OpenCV stuff
+        //
+        //int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        //OpenCvInternalCamera2 camera = OpenCvCameraFactory.getInstance().createInternalCamera2(CameraDirection.BACK, cameraMonitorViewId);
+        OpenCvCamera camera = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK);
+
+        // note, synchronous open (can do async instead, then we don't block here)
+        camera.openCameraDevice();
+        //camera.setExposureMode(ExposureMode.AUTO);
+        //camera.setFocusDistance(2);
+        //camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        camera.startStreaming(960, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        FindQrCodePipeline pipeline = new FindQrCodePipeline();
+        pipeline.parent = this;
+        camera.setPipeline(pipeline);
+
+
+        //
         // done setup wait for start
         //
 
@@ -161,39 +184,6 @@ public class OpenCv extends LinearOpMode {
         elevator.motor_elevator.resetEncoder();
         elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
 
-        //
-        // OpenCV stuff
-        //
-        //int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        //OpenCvCamera camera = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
-        OpenCvCamera camera = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK);
-
-        class FindQrCodePipeline extends OpenCvPipeline
-        {
-            public boolean found_qr = false;
-            public String found_name = "";
-            private QRCodeDetector qr = new QRCodeDetector();
-
-            @Override
-            public Mat processFrame(Mat input)
-            {
-                String result = qr.detectAndDecode(input);
-                if (result != "") {
-                    found_name = result;
-                    found_qr = true;
-                }
-                return input;
-            }
-        }
-
-        // note, synchronous open (can do async instead, then we don't block here)
-        camera.openCameraDevice();
-        camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
-        FindQrCodePipeline pipeline = new FindQrCodePipeline();
-        camera.setPipeline(pipeline);
-
-        String the_code = "";
-
         while(opModeIsActive()) {
             telemetry.addData(
                 "camera",
@@ -206,11 +196,31 @@ public class OpenCv extends LinearOpMode {
             telemetry.addData(
                 "qr",
                 String.format(
-                    "found=%s",
-                    pipeline.found_name
+                    "found='%s' the_code=%s",
+                    pipeline.found_name,
+                    the_code
                 )
             );
             telemetry.update();
         }
     }
 }
+
+
+class FindQrCodePipeline extends OpenCvPipeline
+{
+    public OpenCv parent = null;
+    public String found_name = null;
+    private QRCodeDetector qr = new QRCodeDetector();
+
+    @Override
+    public Mat processFrame(Mat input)
+    {
+        found_name = qr.detectAndDecodeCurved(input);
+        if (found_name != null && !found_name.isEmpty()) {
+            parent.the_code = found_name;
+        }
+        return input;
+    }
+}
+

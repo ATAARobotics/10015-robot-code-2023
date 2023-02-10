@@ -53,6 +53,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+/*
 class FindQrCodePipeline extends OpenCvPipeline
 {
     public String found_name = "";
@@ -65,6 +66,7 @@ class FindQrCodePipeline extends OpenCvPipeline
         return input;
     }
 }
+*/
 
 @Autonomous(name="Kiwi: Linear Autonomous", group="Autonomous")
 public class LinearKiwiAutonomous extends LinearOpMode {
