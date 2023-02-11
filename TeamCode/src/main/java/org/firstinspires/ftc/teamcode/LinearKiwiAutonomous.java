@@ -358,7 +358,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         elevator.open_claw();
         sleep(1000);
         elevator.close_claw();
-        sleep(1500);
+        sleep(1000);
 
         //
         // main logic loop
@@ -410,13 +410,13 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.5 * field_factor)); // north
         todo.add(new WaitAction(1.0));
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.0 * field_factor));
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.8 * field_factor)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.85 * field_factor)); // north
         todo.add(new ElevatorAction(1650)); //go to high position
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.9 * field_factor));//left
         todo.add(new ClawAction()); //open
         todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
         todo.add(new ElevatorAction(300)); //go to drive position
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.8 * field_factor)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
         //todo.add(new OtherTurnAction(0.2, 189.0));  // turn around (so we drive forwards)
 
         int code_number = -1;
@@ -428,10 +428,12 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         telemetry.update();
         if (code_number == 1) {
             // already there
-        } else if (code_number == 3) { // blue
-            todo.add(new DriveAction(0.5, 0.0, 0.0, 3.8 * field_factor));
-        } else {// "2"  -- having trouble scanning this sone?
+        } else if (code_number == 2) {
             todo.add(new DriveAction(0.5, 0, 0.0, 2.0 * field_factor));
+        } else {
+            //todo.add(new DriveAction(0.8, 0.0, 0.0, 3.8 * field_factor));
+            // turbo?
+            todo.add(new DriveAction(0.7, 0.0, 0.0, 2.5 * field_factor));
         }
 
         while (!todo.isEmpty() && opModeIsActive()) {
