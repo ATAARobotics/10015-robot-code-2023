@@ -63,6 +63,12 @@ public class DriveBase extends Object {
     // controller-mode
     private int mode = 2;  // default
 
+    // for the "remember last vector" mode
+    private int left_enc = 0;
+    private int right_enc = 0;
+    private int slide_enc = 0;
+
+
     public DriveBase(HardwareMap hardwareMap) {
         // initialize IMU
         IMU.Parameters imu_params = new IMU.Parameters(
@@ -109,6 +115,16 @@ public class DriveBase extends Object {
         drive.setMaxSpeed(0.50); // 0.0 to 1.0, percentage of "max"
     }
 
+    // reset our encoders -- so that we can get one "vector" from them
+    // later
+    public void reset() {
+        motor_left.resetEncoder();
+        motor_right.resetEncoder();
+        motor_slide.resetEncoder();
+    }
+
+    
+
     // call this repeatedly from the OpMode.loop() function to "do"
     // the drive stuff from the given controller
     public void do_drive_updates(GamepadEx gamepadex, Telemetry telemetry, boolean slow_override) {
@@ -147,6 +163,7 @@ public class DriveBase extends Object {
             );
         } else if (mode == 2) {
             double heading = - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            heading += 0.9; // we think there's absolute error
             telemetry.addData("heading", heading);
 
             drive.driveFieldCentric(

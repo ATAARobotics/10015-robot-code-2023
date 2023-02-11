@@ -164,7 +164,7 @@ public class OpenCv extends LinearOpMode {
         //camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
         camera.startStreaming(960, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
         FindQrCodePipeline pipeline = new FindQrCodePipeline();
-        pipeline.parent = this;
+//        pipeline.parent = this;
         camera.setPipeline(pipeline);
 
 
@@ -205,22 +205,3 @@ public class OpenCv extends LinearOpMode {
         }
     }
 }
-
-
-class FindQrCodePipeline extends OpenCvPipeline
-{
-    public OpenCv parent = null;
-    public String found_name = null;
-    private QRCodeDetector qr = new QRCodeDetector();
-
-    @Override
-    public Mat processFrame(Mat input)
-    {
-        found_name = qr.detectAndDecodeCurved(input);
-        if (found_name != null && !found_name.isEmpty()) {
-            parent.the_code = found_name;
-        }
-        return input;
-    }
-}
-

@@ -53,20 +53,28 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-/*
+//import org.firstinspires.ftc.teamcode.OpenCv.FindQrCodePipeline;
+
+
+
 class FindQrCodePipeline extends OpenCvPipeline
 {
-    public String found_name = "";
+    public LinearKiwiAutonomous parent = null;
+    public String found_name = null;
     private QRCodeDetector qr = new QRCodeDetector();
 
     @Override
     public Mat processFrame(Mat input)
     {
-        found_name = qr.detectAndDecode(input);
+        found_name = qr.detectAndDecodeCurved(input);
+        parent.telemetry.addData("detected" , found_name);
+        if (found_name != null && !found_name.isEmpty()) {
+            parent.the_code = found_name;
+        }
         return input;
     }
 }
-*/
+
 
 @Autonomous(name="Kiwi: Linear Autonomous", group="Autonomous")
 public class LinearKiwiAutonomous extends LinearOpMode {
@@ -76,7 +84,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
     private ColorSensor colour = null;
     private DistanceSensor distance = null;
-    private String found_code = "none";
+    public String the_code = null;
 
     private OpenCvCamera camera = null;
 
@@ -103,6 +111,32 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
 
         public boolean is_done(double time) {
+            return false;
+        }
+    }
+
+    public class WaitAction extends Action {
+        public double start_time = -1.0;
+        public double duration = 0.0;
+
+        public WaitAction(double d) {
+            duration = d;
+        }
+
+        public void do_drive(double heading, DriveBase drivebase) {
+            drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
+        }
+
+        public void do_elevator(Elevator elevator) {
+            if (!elevator.motor_elevator.atTargetPosition()) {
+                elevator.motor_elevator.set(0.15);
+            }
+        }
+
+        public boolean is_done(double time) {
+            if (time >= start_time + duration) {
+                return true;
+            }
             return false;
         }
     }
@@ -158,7 +192,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
     }
 
-    public class DetectColourAction extends Action {
+    public class DetermineCodeAction extends Action {
         public double duration = 0.0;
         public LinearKiwiAutonomous auto = null;
         public String code = "unknown";
@@ -166,9 +200,10 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         FindQrCodePipeline pipeline = new FindQrCodePipeline();
 
 
-        public DetectColourAction(LinearKiwiAutonomous a, double d) {
+        public DetermineCodeAction(LinearKiwiAutonomous a, double d) {
             duration = d;
             auto = a;
+            pipeline.parent = a;
         }
 
         public void do_drive(double heading, DriveBase drivebase) {
@@ -178,17 +213,13 @@ public class LinearKiwiAutonomous extends LinearOpMode {
                 camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
                 camera.setPipeline(pipeline);
             }
-            if (pipeline.found_name != ""){
-                code = pipeline.found_name;
-            }
         }
 
         public boolean is_done(double time) {
             if ((time - start_time) > duration) {
                 return true;
             }
-            if (code != "unknown") {
-                auto.found_code = code;
+            if (auto.the_code != null) {
                 return true;
             }
             return false;
@@ -242,6 +273,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         sleep(1500);
         elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
         elevator.motor_elevator.setTargetPosition(300);
+        sleep(500);
 
         //
         // main logic loop
@@ -252,12 +284,12 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         double heading = 0.0;
 
         // drive ahead, slowly, for a little while
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0)); // ahead
+        todo.add(new DriveAction(0.0, -0.5, 0.0, .5)); // ahead
         todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
-        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.50)); // strafe a bit
-        todo.add(new DriveAction(0.0, -0.40, 0.0, .5));  // drive to cone
-        todo.add(new DetectColourAction(this, 10.0));
+        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.35)); // strafe a bit
+        todo.add(new DetermineCodeAction(this, 10.0));
 
+        drivebase.reset();
         while (!todo.isEmpty() && opModeIsActive()) {
             telemetry.addData("todo", todo.size());
             Action doing = todo.get(0);
@@ -265,24 +297,50 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             doing.start_time = time;
             while (!doing.is_done(time) && opModeIsActive()) {
                 heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+                heading += 0.9; // we think there is absolute error
                 doing.do_drive(heading, drivebase);
                 doing.do_elevator(elevator);
                 telemetry.addData("start_time", doing.start_time);
                 telemetry.addData("time", time);
                 telemetry.addData("heading", heading);
+                telemetry.addData(
+                    "encoders",
+                    String.format(
+                        "left=%d right=%d slide=%d",
+                        drivebase.motor_left.encoder.getPosition(),
+                        drivebase.motor_right.encoder.getPosition(),
+                        drivebase.motor_slide.encoder.getPosition()
+                    )
+                );
                 telemetry.update();
             }
         }
 
-        telemetry.addData("colour", found_code);
+        /*
+        double later = time + 5;
+        while (time < later) {
+            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            heading += 0.9;
+            drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
+        }
+        */
+
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.5)); // ahead
+        todo.add(new WaitAction(1.0)); // ahead
+
+        int code_number = -1;
+        try {
+            code_number = Integer.parseInt(the_code);
+        } catch (NumberFormatException e) {
+        }
+        telemetry.addData("code", code_number);
         telemetry.update();
-        if (found_code == "2") {
+        if (code_number == 1) {
+            todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.0));
+        } else if (code_number == 3) { // blue
+            todo.add(new DriveAction(0.5, 0.0, 0.0, 2.0));
+        } else {// "2"  -- having trouble scanning this sone?
             todo.add(new DriveAction(0.0, -0.5, 0.0, 0.2));
-        } else if (found_code == "1") {
-            todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.5));
-        } else if (found_code == "3") { // blue
-            todo.add(new DriveAction(0.5, -0.5, 0.0, 0.4));
-            todo.add(new DriveAction(0.5, 0.0, 0.0, 2.5));
         }
 
         while (!todo.isEmpty() && opModeIsActive()) {
@@ -291,6 +349,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             doing.start_time = time;
             while (!doing.is_done(time)) {
                 heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+                heading += 0.9;
                 doing.do_drive(heading, drivebase);
             }
         }
@@ -302,8 +361,10 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         while (!elevator.motor_elevator.atTargetPosition() && opModeIsActive() && time < timeout) {
             // XXX why does this ever successfuly go "down" at all??
             elevator.motor_elevator.set(0.15);
+            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            heading += 0.9;
+            drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
         }
         elevator.motor_elevator.setRunMode(Motor.RunMode.RawPower);
-        sleep(1500);
     }
 }
