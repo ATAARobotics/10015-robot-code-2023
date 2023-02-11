@@ -368,12 +368,15 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
         double heading = 0.0;
 
+        // account for extra friction in field.
+        double field_factor = 1.2;
+
         // drive ahead, slowly, for a little while
         todo.add(new ElevatorAction(300));
-        todo.add(new DriveAction(0.0, -0.5, 0.0, .5)); // ahead
+        todo.add(new DriveAction(0.0, -0.5, 0.0, .5 * field_factor)); // ahead
         todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
-        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.35)); // strafe a bit
-        todo.add(new DetermineCodeAction(this, 8.0));
+        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.8 * field_factor)); // strafe a bit
+        todo.add(new DetermineCodeAction(this, 5.0));
 
         drivebase.reset();
         while (!todo.isEmpty() && opModeIsActive()) {
@@ -404,17 +407,17 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             }
         }
 
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.5)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.5 * field_factor)); // north
         todo.add(new WaitAction(1.0));
-        todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.0));
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.85)); // north
-        todo.add(new ElevatorAction(1540)); //go to high position
-        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.8));//left
+        todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.0 * field_factor));
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.8 * field_factor)); // north
+        todo.add(new ElevatorAction(1650)); //go to high position
+        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.9 * field_factor));//left
         todo.add(new ClawAction()); //open
-        todo.add(new DriveAction(0.5,0.0,0,0.8));
+        todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
         todo.add(new ElevatorAction(300)); //go to drive position
-        todo.add(new OtherTurnAction(0.2, 89.0));  // turn around (so we drive forwards)
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.9)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.8 * field_factor)); // north
+        //todo.add(new OtherTurnAction(0.2, 189.0));  // turn around (so we drive forwards)
 
         int code_number = -1;
         try {
@@ -426,13 +429,14 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         if (code_number == 1) {
             // already there
         } else if (code_number == 3) { // blue
-            todo.add(new DriveAction(0.5, 0.0, 0.0, 3.8));
+            todo.add(new DriveAction(0.5, 0.0, 0.0, 3.8 * field_factor));
         } else {// "2"  -- having trouble scanning this sone?
-            todo.add(new DriveAction(0.5, 0, 0.0, 2.0));
+            todo.add(new DriveAction(0.5, 0, 0.0, 2.0 * field_factor));
         }
 
         while (!todo.isEmpty() && opModeIsActive()) {
             telemetry.addData("todo", todo.size());
+            telemetry.addData("code", code_number);
             Action doing = todo.get(0);
             todo.remove(doing);
             doing.start(time, drivebase, elevator);
