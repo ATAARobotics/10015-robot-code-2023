@@ -80,7 +80,7 @@ public class LinearKiwiAutonomousLeft extends LinearKiwiAutonomous {
         } else if (code_number == 3) {
             //todo.add(new DriveAction(0.8, 0.0, 0.0, 3.8 * field_factor));
             // turbo?
-            todo.add(new DriveAction(-0.8, 0.0, 0.0, 1.8 * field_factor));
+            todo.add(new DriveAction(-0.8, 0.0, 0.0, 1.95 * field_factor));
         } else {
             todo.add(new DriveAction(-0.5, 0, 0.0, 2.4 * field_factor));
         }
