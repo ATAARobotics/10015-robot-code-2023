@@ -254,6 +254,32 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
     }
 
+    public class OtherTurnAction extends Action {
+        public double stick_x = 0.0;
+        public double stick_y = 0.0;
+        public double turn = 0.0;
+        public double target_heading = 0.0;
+        public boolean done = false;
+
+        public OtherTurnAction(double t, double target) {
+            stick_x = 0.0;
+            stick_y = 0.0;
+            turn = t;
+            target_heading = target;
+        }
+
+        public void do_drive(double heading, DriveBase drivebase) {
+            drivebase.drive.driveFieldCentric(stick_x, stick_y, turn, heading);
+            if (heading > target_heading) {
+                done = true;
+            }
+        }
+
+        public boolean is_done(double time) {
+            return done;
+        }
+    }
+
     public class DetermineCodeAction extends Action {
         public double duration = 0.0;
         public LinearKiwiAutonomous auto = null;
@@ -387,7 +413,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         todo.add(new ClawAction()); //open
         todo.add(new DriveAction(0.5,0.0,0,0.8));
         todo.add(new ElevatorAction(300)); //go to drive position
-        todo.add(new TurnAction(-0.2, 89.0));  // turn around (so we drive forwards)
+        todo.add(new OtherTurnAction(0.2, 89.0));  // turn around (so we drive forwards)
         todo.add(new DriveAction(0.0, -0.5, 0.0, 0.9)); // north
 
         int code_number = -1;
