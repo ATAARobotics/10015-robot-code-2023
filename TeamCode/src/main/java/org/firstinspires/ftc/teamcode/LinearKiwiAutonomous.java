@@ -100,6 +100,10 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     public class Action {
         public double start_time = -1.0;
 
+        public void start(double t, DriveBase drivebase, Elevator elevator) {
+            start_time = t;
+        }
+
         public void do_drive(double heading, DriveBase drivebase) {
             drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
         }
@@ -122,26 +126,44 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             target = t;
         }
 
+        public void start(double t, DriveBase drivebase, Elevator elevator) {
+            start_time = t;
+            elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
+            elevator.motor_elevator.setTargetPosition(target);
+        }
+
         public void do_drive(double heading, DriveBase drivebase) {
             drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
         }
 
         public void do_elevator(Elevator elevator) {
-            elevator.motor_elevator.setTargetPosition(target);
             if (!elevator.motor_elevator.atTargetPosition()) {
                 elevator.motor_elevator.set(0.15);
             }
+        }
+
+        public boolean is_done(double time) {
+            return (time - start_time > 2.0);/*
+            if (elevator.motor_elevator.atTargetPosition()) {
+                return true;
+            }
+            return false;
+            */
         }
     }
 
     public class ClawAction extends Action {
         public boolean closed = false;
+
+        public ClawAction() {
+        }
+
         public void do_drive(double heading, DriveBase drivebase) {
             drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
         }
 
         public void do_elevator(Elevator elevator) {
-            if (!closed){
+            if (!closed) {
                 closed = true;
                 elevator.open_claw();
             }
@@ -313,9 +335,6 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         sleep(1000);
         elevator.close_claw();
         sleep(1500);
-        elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
-        elevator.motor_elevator.setTargetPosition(300);
-        sleep(500);
 
         //
         // main logic loop
@@ -326,6 +345,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         double heading = 0.0;
 
         // drive ahead, slowly, for a little while
+        todo.add(new ElevatorAction(300));
         todo.add(new DriveAction(0.0, -0.5, 0.0, .5)); // ahead
         todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
         todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.35)); // strafe a bit
@@ -336,7 +356,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             telemetry.addData("todo", todo.size());
             Action doing = todo.get(0);
             todo.remove(doing);
-            doing.start_time = time;
+            doing.start(time, drivebase, elevator);
             while (!doing.is_done(time) && opModeIsActive()) {
                 heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
                 heading += 0.9; // we think there is absolute error
@@ -368,15 +388,15 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         */
 
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.5)); // north
-        todo.add(new WaitAction(1.0)); // ahead
+        todo.add(new WaitAction(1.0));
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.0));
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.75)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.85)); // north
         todo.add(new ElevatorAction(1550)); //go to high position
-        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.2));//left
+        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.8));//left
         todo.add(new ClawAction()); //open
-        todo.add(new DriveAction(0.5,0.0,0,0.2));
+        todo.add(new DriveAction(0.5,0.0,0,0.8));
         todo.add(new ElevatorAction(300)); //go to drive position
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.75)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.9)); // north
 
         int code_number = -1;
         try {
@@ -386,9 +406,9 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         telemetry.addData("code", code_number);
         telemetry.update();
         if (code_number == 1) {
-
+            // already there
         } else if (code_number == 3) { // blue
-            todo.add(new DriveAction(0.5, 0.0, 0.0, 3.5));
+            todo.add(new DriveAction(0.5, 0.0, 0.0, 4.0));
         } else {// "2"  -- having trouble scanning this sone?
             todo.add(new DriveAction(0.5, 0, 0.0, 2.0));
         }
@@ -396,7 +416,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         while (!todo.isEmpty() && opModeIsActive()) {
             Action doing = todo.get(0);
             todo.remove(doing);
-            doing.start_time = time;
+            doing.start(time, drivebase, elevator);
             while (!doing.is_done(time)) {
                 heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
                 heading += 0.9;
@@ -406,6 +426,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
         // done
         ensure_stop(heading);
+        elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
         elevator.motor_elevator.setTargetPosition(10);
         double timeout = time + 2.0;
         while (!elevator.motor_elevator.atTargetPosition() && opModeIsActive() && time < timeout) {
