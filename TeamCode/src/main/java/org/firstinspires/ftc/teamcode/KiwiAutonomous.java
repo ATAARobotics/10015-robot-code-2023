@@ -43,7 +43,7 @@ import org.firstinspires.ftc.teamcode.DriveBase;
 import org.firstinspires.ftc.teamcode.Elevator;
 
 
-@Autonomous(name="Kiwi: Autonomous", group="Autonomous")
+//@Autonomous(name="Kiwi: Autonomous", group="Autonomous")
 public class KiwiAutonomous extends OpMode {
 
     private DriveBase drivebase = null;

@@ -47,7 +47,7 @@ import org.firstinspires.ftc.teamcode.DriveBase;
 import org.firstinspires.ftc.teamcode.Elevator;
 
 
-@Autonomous(name="Motor Tests", group="Autonomous")
+//@Autonomous(name="Motor Tests", group="Autonomous")
 public class MotorTests extends LinearOpMode {
 
     private DriveBase drivebase = null;

@@ -76,7 +76,7 @@ class FindQrCodePipeline extends OpenCvPipeline
 }
 
 
-@Autonomous(name="Kiwi: Linear Autonomous", group="Autonomous")
+@Autonomous(name="Kiwi: Linear Autonomous (RIGHT)", group="Autonomous")
 public class LinearKiwiAutonomous extends LinearOpMode {
 
     private DriveBase drivebase = null;
@@ -314,6 +314,29 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
     }
 
+    public void add_todo_list_post_detection(List<Action> todo, double field_factor, int code_number) {
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.5 * field_factor)); // north
+        todo.add(new WaitAction(1.0));
+        todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.0 * field_factor));
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.85 * field_factor)); // north
+        todo.add(new ElevatorAction(1650)); //go to high position
+        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.9 * field_factor));//left
+        todo.add(new ClawAction()); //open
+        todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
+        todo.add(new ElevatorAction(300)); //go to drive position
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
+        //todo.add(new OtherTurnAction(0.2, 189.0));  // turn around (so we drive forwards)
+
+        if (code_number == 1) {
+            // already there
+        } else if (code_number == 2) {
+            todo.add(new DriveAction(0.5, 0, 0.0, 2.0 * field_factor));
+        } else {
+            //todo.add(new DriveAction(0.8, 0.0, 0.0, 3.8 * field_factor));
+            // turbo?
+            todo.add(new DriveAction(0.7, 0.0, 0.0, 2.5 * field_factor));
+        }
+    }
 
     @Override
     public void runOpMode() {
@@ -407,17 +430,9 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             }
         }
 
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.5 * field_factor)); // north
-        todo.add(new WaitAction(1.0));
-        todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.0 * field_factor));
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.85 * field_factor)); // north
-        todo.add(new ElevatorAction(1650)); //go to high position
-        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.9 * field_factor));//left
-        todo.add(new ClawAction()); //open
-        todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
-        todo.add(new ElevatorAction(300)); //go to drive position
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
-        //todo.add(new OtherTurnAction(0.2, 189.0));  // turn around (so we drive forwards)
+        //
+        // translate code
+        //
 
         int code_number = -1;
         try {
@@ -425,16 +440,8 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         } catch (NumberFormatException e) {
         }
         telemetry.addData("code", code_number);
-        telemetry.update();
-        if (code_number == 1) {
-            // already there
-        } else if (code_number == 2) {
-            todo.add(new DriveAction(0.5, 0, 0.0, 2.0 * field_factor));
-        } else {
-            //todo.add(new DriveAction(0.8, 0.0, 0.0, 3.8 * field_factor));
-            // turbo?
-            todo.add(new DriveAction(0.7, 0.0, 0.0, 2.5 * field_factor));
-        }
+
+        add_todo_list_post_detection(todo, field_factor, code_number);
 
         while (!todo.isEmpty() && opModeIsActive()) {
             telemetry.addData("todo", todo.size());
