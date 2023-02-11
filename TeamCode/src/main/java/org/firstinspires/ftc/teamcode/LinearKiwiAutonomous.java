@@ -67,7 +67,6 @@ class FindQrCodePipeline extends OpenCvPipeline
     public Mat processFrame(Mat input)
     {
         found_name = qr.detectAndDecodeCurved(input);
-        parent.telemetry.addData("detected" , found_name);
         if (found_name != null && !found_name.isEmpty()) {
             parent.the_code = found_name;
         }
@@ -287,7 +286,6 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         public boolean started = false;
         FindQrCodePipeline pipeline = new FindQrCodePipeline();
 
-
         public DetermineCodeAction(LinearKiwiAutonomous a, double d) {
             duration = d;
             auto = a;
@@ -315,26 +313,24 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     }
 
     public void add_todo_list_post_detection(List<Action> todo, double field_factor, int code_number) {
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.5 * field_factor)); // north
-        todo.add(new WaitAction(1.0));
-        todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.0 * field_factor));
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.85 * field_factor)); // north
-        todo.add(new ElevatorAction(1650)); //go to high position
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.9 * field_factor)); // north
+        todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.1 * field_factor)); // west
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.80 * field_factor)); // north
+        todo.add(new ElevatorAction(1660)); //go to high position
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.9 * field_factor));//left
         todo.add(new ClawAction()); //open
         todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
         todo.add(new ElevatorAction(300)); //go to drive position
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
-        //todo.add(new OtherTurnAction(0.2, 189.0));  // turn around (so we drive forwards)
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.2 * field_factor)); // north
 
         if (code_number == 1) {
             // already there
-        } else if (code_number == 2) {
-            todo.add(new DriveAction(0.5, 0, 0.0, 2.0 * field_factor));
-        } else {
+        } else if (code_number == 3) {
             //todo.add(new DriveAction(0.8, 0.0, 0.0, 3.8 * field_factor));
             // turbo?
-            todo.add(new DriveAction(0.7, 0.0, 0.0, 2.5 * field_factor));
+            todo.add(new DriveAction(0.8, 0.0, 0.0, 2.5 * field_factor));
+        } else {
+            todo.add(new DriveAction(0.5, 0, 0.0, 2.2 * field_factor));
         }
     }
 
@@ -379,9 +375,9 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         elevator.motor_elevator.resetEncoder();
         elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
         elevator.open_claw();
-        sleep(1000);
+        sleep(500);
         elevator.close_claw();
-        sleep(1000);
+        sleep(500);
 
         //
         // main logic loop
@@ -396,10 +392,10 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
         // drive ahead, slowly, for a little while
         todo.add(new ElevatorAction(300));
-        todo.add(new DriveAction(0.0, -0.5, 0.0, .5 * field_factor)); // ahead
+        todo.add(new DriveAction(0.0, -0.5, 0.0, .2 * field_factor)); // ahead
         todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
-        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.8 * field_factor)); // strafe a bit
-        todo.add(new DetermineCodeAction(this, 5.0));
+        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.5 * field_factor)); // strafe a bit
+        todo.add(new DetermineCodeAction(this, 6.0));
 
         drivebase.reset();
         while (!todo.isEmpty() && opModeIsActive()) {
@@ -416,6 +412,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
                 telemetry.addData("time", time);
                 telemetry.addData("duration", time - doing.start_time);
                 telemetry.addData("heading", heading);
+                telemetry.addData("the_code", the_code);
                 telemetry.addData(
                     "encoders",
                     String.format(
@@ -425,7 +422,6 @@ public class LinearKiwiAutonomous extends LinearOpMode {
                         drivebase.motor_slide.encoder.getPosition()
                     )
                 );
-                telemetry.addData("detected", the_code);
                 telemetry.update();
             }
         }
