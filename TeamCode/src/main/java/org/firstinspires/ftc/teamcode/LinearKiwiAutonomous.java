@@ -337,11 +337,11 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.1 * field_factor)); // west
         todo.add(new DriveAction(0.0, -0.5, 0.0, 0.66 * field_factor)); // north
         todo.add(new ElevatorAction(1660)); //go to high position
-        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.9 * field_factor));//left
+        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.85 * field_factor));//left
         todo.add(new ClawAction()); //open
         todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
         todo.add(new ElevatorAction(300)); //go to drive position
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.1 * field_factor)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
 
         if (code_number == 1) {
             // already there

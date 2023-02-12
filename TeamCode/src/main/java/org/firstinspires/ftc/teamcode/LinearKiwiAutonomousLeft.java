@@ -65,22 +65,22 @@ public class LinearKiwiAutonomousLeft extends LinearKiwiAutonomous {
     public void add_todo_list_post_detection(List<Action> todo, double field_factor, int code_number) {
         todo.add(new OtherTurnAction(0.3, 89.0));  // turn around (so we drive forwards)
         todo.add(new DriveAction(0.4, 0.0, 0.0, 0.4 * field_factor)); // strafe a bit
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.78 * field_factor)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.80 * field_factor)); // north
         todo.add(new DriveAction(0.5, 0.0, 0.0, 2.2 * field_factor)); // EAST
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.75 * field_factor)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.66 * field_factor)); // north
         todo.add(new ElevatorAction(1660)); //go to high position
-        todo.add(new DriveAction(0.5, 0.0, 0.0, 0.9 * field_factor));//right
+        todo.add(new DriveAction(0.5, 0.0, 0.0, 0.85 * field_factor));//right
         todo.add(new ClawAction()); //open
         todo.add(new DriveAction(-0.5,0.0,0,0.8 * field_factor)); //west
         todo.add(new ElevatorAction(300)); //go to drive position
         todo.add(new DriveAction(0.0, -0.5, 0.0, 0.9 * field_factor)); // north
 
         if (code_number == 1) {
-            // already there
-        } else if (code_number == 3) {
             //todo.add(new DriveAction(0.8, 0.0, 0.0, 3.8 * field_factor));
             // turbo?
             todo.add(new DriveAction(-0.8, 0.0, 0.0, 1.95 * field_factor));
+        } else if (code_number == 3) {
+            // already there
         } else {
             todo.add(new DriveAction(-0.5, 0, 0.0, 2.4 * field_factor));
         }
