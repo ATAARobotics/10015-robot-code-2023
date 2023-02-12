@@ -172,12 +172,12 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
         public void do_elevator(Elevator elevator) {
             if (elevator.motor_elevator.getCurrentPosition() > target) {
-                elevator.motor_elevator.set(0.05);
+                elevator.motor_elevator.set(-0.05);
             }
         }
 
         public boolean is_done(double time) {
-            if (elevator.motor_elevator.atTargetPosition() || time - start_time > 3.0) {
+            if (elevator.motor_elevator.getCurrentPosition() <= target || time - start_time > 3.0) {
                 return true;
             }
             return false;
@@ -374,7 +374,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         todo.add(new ElevatorAction(1460, 0.05)); // down a little
         todo.add(new ClawAction()); //open
         todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
-        todo.add(new SlowElevatorDownAction(300)); //go to drive position
+        todo.add(new SlowElevatorDownAction(400)); //go to drive position
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
 
         if (code_number == 1) {
@@ -386,7 +386,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         } else {
             todo.add(new DriveAction(0.5, 0, 0.0, 2.0 * field_factor));
         }
-        todo.add(new SlowElevatorDownAction(10)); // "bottom" basically
+        todo.add(new SlowElevatorDownAction(20)); // "bottom" basically
     }
 
     @Override
