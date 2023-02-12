@@ -122,9 +122,11 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
     public class ElevatorAction extends Action {
         public int target = 0;
+        public double speed = 0.15;
 
-        public ElevatorAction(int t) {
+        public ElevatorAction(int t, double s) {
             target = t;
+            speed = s;
         }
 
         public void start(double t, DriveBase drivebase, Elevator elevator) {
@@ -335,12 +337,15 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     public void add_todo_list_post_detection(List<Action> todo, double field_factor, int code_number) {
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.8 * field_factor)); // north
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.1 * field_factor)); // west
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.66 * field_factor)); // north
-        todo.add(new ElevatorAction(1660)); //go to high position
-        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.85 * field_factor));//left
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.60 * field_factor)); // north
+        todo.add(new ElevatorAction(1660, 0.15)); //go to high position
+        todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.70 * field_factor));//left
+        todo.add(new ElevatorAction(1460, 0.05)); // down a little
         todo.add(new ClawAction()); //open
         todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
-        todo.add(new ElevatorAction(300)); //go to drive position
+        todo.add(new ElevatorAction(750, 0.05)); //go to drive position
+        todo.add(new WaitAction(0.5));
+        todo.add(new ElevatorAction(300, 0.05)); //go to drive position
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
 
         if (code_number == 1) {
@@ -411,10 +416,10 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
         // drive ahead, slowly, for a little while
         todo.add(new WaitAction(0.8));
-        todo.add(new ElevatorAction(300));
+        todo.add(new ElevatorAction(300, 0.15));
         todo.add(new DriveAction(0.0, -0.5, 0.0, .2 * field_factor)); // ahead
         todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
-        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.5 * field_factor)); // strafe a bit
+        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.6 * field_factor)); // strafe a bit
         todo.add(new DetermineCodeAction(this, 6.0));
 
         drivebase.reset();
@@ -433,6 +438,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
                 telemetry.addData("duration", time - doing.start_time);
                 telemetry.addData("heading", heading);
                 telemetry.addData("the_code", the_code);
+                telemetry.addData("elevator", elevator.motor_elevator.encoder.getPosition());
                 telemetry.addData(
                     "encoders",
                     String.format(
@@ -457,6 +463,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         while (!todo.isEmpty() && opModeIsActive()) {
             telemetry.addData("todo", todo.size());
             telemetry.addData("code", the_code);
+            telemetry.addData("elevator", elevator.motor_elevator.encoder.getPosition());
             Action doing = todo.get(0);
             todo.remove(doing);
             doing.start(time, drivebase, elevator);
