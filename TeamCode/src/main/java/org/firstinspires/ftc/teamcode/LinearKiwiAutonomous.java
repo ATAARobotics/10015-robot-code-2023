@@ -153,6 +153,37 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
     }
 
+
+    public class SlowElevatorDownAction extends Action {
+        public int target = 0;
+
+        public SlowElevatorDownAction(int t) {
+            target = t;
+        }
+
+        public void start(double t, DriveBase drivebase, Elevator elevator) {
+            start_time = t;
+            elevator.motor_elevator.setRunMode(Motor.RunMode.RawPower);
+        }
+
+        public void do_drive(double heading, DriveBase drivebase) {
+            drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
+        }
+
+        public void do_elevator(Elevator elevator) {
+            if (elevator.motor_elevator.getCurrentPosition() > target) {
+                elevator.motor_elevator.set(0.05);
+            }
+        }
+
+        public boolean is_done(double time) {
+            if (elevator.motor_elevator.atTargetPosition() || time - start_time > 3.0) {
+                return true;
+            }
+            return false;
+        }
+    }
+
     public class ClawAction extends Action {
         public boolean closed = false;
 
@@ -343,9 +374,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         todo.add(new ElevatorAction(1460, 0.05)); // down a little
         todo.add(new ClawAction()); //open
         todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
-        todo.add(new ElevatorAction(750, 0.03)); //go to drive position
-        todo.add(new WaitAction(0.5));
-        todo.add(new ElevatorAction(300, 0.05)); //go to drive position
+        todo.add(new SlowElevatorDownAction(300)); //go to drive position
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
 
         if (code_number == 1) {
@@ -357,7 +386,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         } else {
             todo.add(new DriveAction(0.5, 0, 0.0, 2.0 * field_factor));
         }
-        todo.add(new ElevatorAction(15, 0.01)); //go to drive position
+        todo.add(new SlowElevatorDownAction(10)); // "bottom" basically
     }
 
     @Override
