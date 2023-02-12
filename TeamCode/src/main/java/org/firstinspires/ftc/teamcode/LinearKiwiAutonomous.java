@@ -508,16 +508,6 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
         // done
         ensure_stop(heading);
-        elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
-        elevator.motor_elevator.setTargetPosition(10);
-        double timeout = time + 2.0;
-        while (!elevator.motor_elevator.atTargetPosition() && opModeIsActive() && time < timeout) {
-            // XXX why does this ever successfuly go "down" at all??
-            elevator.motor_elevator.set(0.15);
-            heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            heading += 0.9;
-            drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
-        }
         elevator.motor_elevator.setRunMode(Motor.RunMode.RawPower);
     }
 }
