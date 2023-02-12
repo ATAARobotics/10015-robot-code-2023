@@ -355,7 +355,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             // turbo?
             todo.add(new DriveAction(0.8, 0.0, 0.0, 2.5 * field_factor));
         } else {
-            todo.add(new DriveAction(0.5, 0, 0.0, 2.2 * field_factor));
+            todo.add(new DriveAction(0.5, 0, 0.0, 2.0 * field_factor));
         }
         todo.add(new ElevatorAction(15, 0.01)); //go to drive position
     }
