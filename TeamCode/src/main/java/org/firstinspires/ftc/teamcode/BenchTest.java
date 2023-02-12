@@ -295,10 +295,10 @@ public class BenchTest extends LinearOpMode {
 
     public class DetermineCodeAction extends Action {
         public double duration = 0.0;
-        public LinearKiwiAutonomous auto = null;
+        public BenchTest auto = null;
         AprilTagDetectionPipeline pipeline = null;
 
-        public DetermineCodeAction(LinearKiwiAutonomous a, double d) {
+        public DetermineCodeAction(BenchTest a, double d) {
             duration = d;
             auto = a;
         }
