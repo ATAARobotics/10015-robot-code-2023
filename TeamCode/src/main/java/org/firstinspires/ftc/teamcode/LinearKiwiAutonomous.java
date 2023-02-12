@@ -53,6 +53,8 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import org.openftc.apriltag.AprilTagDetection;
+
 //import org.firstinspires.ftc.teamcode.OpenCv.FindQrCodePipeline;
 
 
@@ -68,7 +70,7 @@ class FindQrCodePipeline extends OpenCvPipeline
     {
         found_name = qr.detectAndDecodeCurved(input);
         if (found_name != null && !found_name.isEmpty()) {
-            parent.the_code = found_name;
+            //parent.the_code = found_name;
         }
         return input;
     }
@@ -83,7 +85,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
     private ColorSensor colour = null;
     private DistanceSensor distance = null;
-    public String the_code = null;
+    public int the_code = -1;
 
     private OpenCvCamera camera = null;
 
@@ -282,22 +284,40 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     public class DetermineCodeAction extends Action {
         public double duration = 0.0;
         public LinearKiwiAutonomous auto = null;
-        public String code = "unknown";
-        public boolean started = false;
-        FindQrCodePipeline pipeline = new FindQrCodePipeline();
+        AprilTagDetectionPipeline pipeline = null;
 
         public DetermineCodeAction(LinearKiwiAutonomous a, double d) {
             duration = d;
             auto = a;
-            pipeline.parent = a;
         }
 
         public void do_drive(double heading, DriveBase drivebase) {
             drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
-            if (!started) {
-                started = true;
-                camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
+            if (pipeline == null) {
+                double tagsize = 0.166;
+                double fx = 578.272;
+                double fy = 578.272;
+                double cx = 402.145;
+                double cy = 221.506;
+                pipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
+                pipeline.setDecimation(3);//DECIMATION_HIGH);
+
+                camera.startStreaming(640, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                //camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
                 camera.setPipeline(pipeline);
+            }
+
+            int detected = -1;
+            ArrayList<AprilTagDetection> detections = pipeline.getDetectionsUpdate();
+            if(detections != null) {
+                if(detections.size() != 0) {
+                    for(AprilTagDetection detection : detections) {
+                        detected = detection.id;
+                    }
+                }
+            }
+            if (detected != -1) {
+                auto.the_code = detected;
             }
         }
 
@@ -305,7 +325,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             if ((time - start_time) > duration) {
                 return true;
             }
-            if (auto.the_code != null) {
+            if (auto.the_code != -1) {
                 return true;
             }
             return false;
@@ -315,7 +335,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     public void add_todo_list_post_detection(List<Action> todo, double field_factor, int code_number) {
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.8 * field_factor)); // north
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.1 * field_factor)); // west
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.70 * field_factor)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.66 * field_factor)); // north
         todo.add(new ElevatorAction(1660)); //go to high position
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.9 * field_factor));//left
         todo.add(new ClawAction()); //open
@@ -430,18 +450,13 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         // translate code
         //
 
-        int code_number = -1;
-        try {
-            code_number = Integer.parseInt(the_code);
-        } catch (NumberFormatException e) {
-        }
-        telemetry.addData("code", code_number);
+        telemetry.addData("code", the_code);
 
-        add_todo_list_post_detection(todo, field_factor, code_number);
+        add_todo_list_post_detection(todo, field_factor, the_code);
 
         while (!todo.isEmpty() && opModeIsActive()) {
             telemetry.addData("todo", todo.size());
-            telemetry.addData("code", code_number);
+            telemetry.addData("code", the_code);
             Action doing = todo.get(0);
             todo.remove(doing);
             doing.start(time, drivebase, elevator);

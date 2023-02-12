@@ -39,6 +39,8 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvInternalCamera2;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import org.openftc.apriltag.AprilTagDetection;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.motors.RevRoboticsUltraPlanetaryHdHexMotor;
 
@@ -155,16 +157,25 @@ public class OpenCv extends LinearOpMode {
         //
         //int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         //OpenCvInternalCamera2 camera = OpenCvCameraFactory.getInstance().createInternalCamera2(CameraDirection.BACK, cameraMonitorViewId);
-        OpenCvCamera camera = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK);
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        OpenCvCamera camera = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
 
         // note, synchronous open (can do async instead, then we don't block here)
         camera.openCameraDevice();
         //camera.setExposureMode(ExposureMode.AUTO);
         //camera.setFocusDistance(2);
         //camera.startStreaming(1280, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
-        camera.startStreaming(960, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
-        FindQrCodePipeline pipeline = new FindQrCodePipeline();
-//        pipeline.parent = this;
+        //camera.startStreaming(960, 720, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        camera.startStreaming(640, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
+        //FindQrCodePipeline2 pipeline = new FindQrCodePipeline2();
+        double tagsize = 0.166;
+        double fx = 578.272;
+        double fy = 578.272;
+        double cx = 402.145;
+        double cy = 221.506;
+
+        AprilTagDetectionPipeline pipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
+        pipeline.setDecimation(3);//DECIMATION_HIGH);
         camera.setPipeline(pipeline);
 
 
@@ -184,6 +195,9 @@ public class OpenCv extends LinearOpMode {
         elevator.motor_elevator.resetEncoder();
         elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
 
+        AprilTagDetection d = null;
+        int detected = -1;
+
         while(opModeIsActive()) {
             telemetry.addData(
                 "camera",
@@ -193,14 +207,15 @@ public class OpenCv extends LinearOpMode {
                     camera.getTotalFrameTimeMs()
                 )
             );
-            telemetry.addData(
-                "qr",
-                String.format(
-                    "found='%s' the_code=%s",
-                    pipeline.found_name,
-                    the_code
-                )
-            );
+            ArrayList<AprilTagDetection> detections = pipeline.getDetectionsUpdate();
+            if(detections != null) {
+                if(detections.size() != 0) {
+                    for(AprilTagDetection detection : detections) {
+                        detected = detection.id;
+                    }
+                }
+            }
+            telemetry.addData("tag", detected);
             telemetry.update();
         }
     }
