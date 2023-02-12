@@ -337,13 +337,13 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     public void add_todo_list_post_detection(List<Action> todo, double field_factor, int code_number) {
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.8 * field_factor)); // north
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.1 * field_factor)); // west
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.60 * field_factor)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.57 * field_factor)); // north
         todo.add(new ElevatorAction(1660, 0.15)); //go to high position
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.70 * field_factor));//left
         todo.add(new ElevatorAction(1460, 0.05)); // down a little
         todo.add(new ClawAction()); //open
         todo.add(new DriveAction(0.5,0.0,0,0.8 * field_factor));
-        todo.add(new ElevatorAction(750, 0.05)); //go to drive position
+        todo.add(new ElevatorAction(750, 0.03)); //go to drive position
         todo.add(new WaitAction(0.5));
         todo.add(new ElevatorAction(300, 0.05)); //go to drive position
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
@@ -357,6 +357,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         } else {
             todo.add(new DriveAction(0.5, 0, 0.0, 2.2 * field_factor));
         }
+        todo.add(new ElevatorAction(15, 0.01)); //go to drive position
     }
 
     @Override
