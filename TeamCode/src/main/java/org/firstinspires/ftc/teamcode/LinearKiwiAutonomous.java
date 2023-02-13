@@ -368,7 +368,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     public void add_todo_list_post_detection(List<Action> todo, double field_factor, int code_number) {
         todo.add(new DriveAction(0.0, -0.5, 0.0, 1.8 * field_factor)); // north
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 2.1 * field_factor)); // west
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.57 * field_factor)); // north
+        todo.add(new DriveAction(0.0, -0.5, 0.0, 0.59 * field_factor)); // north
         todo.add(new ElevatorAction(1660, 0.15)); //go to high position
         todo.add(new DriveAction(-0.5, 0.0, 0.0, 0.70 * field_factor));//left
         todo.add(new ElevatorAction(1460, 0.05)); // down a little
