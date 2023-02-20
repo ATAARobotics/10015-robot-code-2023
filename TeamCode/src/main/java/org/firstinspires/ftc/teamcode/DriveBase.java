@@ -80,10 +80,14 @@ public class DriveBase extends Object {
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(imu_params);
 
+        // parameters about our motors (ftplib has gobilda built-in, not rev)
+        double ticks_per_rev = 294.0;
+        double max_rpm = 505.0;
+
         // initialize motors
-        motor_left = new Motor(hardwareMap, "left");
-        motor_right = new Motor(hardwareMap, "right");
-        motor_slide = new Motor(hardwareMap, "slide");
+        motor_left = new Motor(hardwareMap, "left", ticks_per_rev, max_rpm);
+        motor_right = new Motor(hardwareMap, "right", ticks_per_rev, max_rpm);
+        motor_slide = new Motor(hardwareMap, "slide", ticks_per_rev, max_rpm);
 
         motor_left.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
@@ -92,6 +96,9 @@ public class DriveBase extends Object {
         motor_left.setRunMode(Motor.RunMode.VelocityControl);
         motor_right.setRunMode(Motor.RunMode.VelocityControl);
         motor_slide.setRunMode(Motor.RunMode.VelocityControl);
+        motor_left.setVeloCoefficients(0.02, 0, 0);
+        motor_right.setVeloCoefficients(0.02, 0, 0);
+        motor_slide.setVeloCoefficients(0.02, 0, 0);
 
         motor_left.setInverted(false);
         motor_right.setInverted(false);
@@ -123,8 +130,6 @@ public class DriveBase extends Object {
         motor_slide.resetEncoder();
     }
 
-    
-
     // call this repeatedly from the OpMode.loop() function to "do"
     // the drive stuff from the given controller
     public void do_drive_updates(GamepadEx gamepadex, Telemetry telemetry, boolean slow_override) {
@@ -147,6 +152,15 @@ public class DriveBase extends Object {
         }
         drive.setMaxSpeed(max_speed);
         telemetry.addData("max_speed", max_speed);
+        telemetry.addData(
+            "velocity",
+            String.format(
+                "l=%.2f r=%.2f s=%.2f",
+                motor_left.encoder.getRawVelocity(),
+                motor_right.encoder.getRawVelocity(),
+                motor_slide.encoder.getRawVelocity()
+            )
+        );
 
         if (mode == 0) {
             // simple at first: left-strick forward/back + turn
