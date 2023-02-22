@@ -14,6 +14,9 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -39,6 +42,8 @@ import com.arcrobotics.ftclib.controller.PIDController;
 import org.firstinspires.ftc.teamcode.DriveBase;
 import org.firstinspires.ftc.teamcode.Elevator;
 
+import java.util.ArrayList;
+
 
 @TeleOp(name="Kiwi: TeleOp", group="Opmode")
 public class KiwiDrive extends OpMode {
@@ -53,9 +58,13 @@ public class KiwiDrive extends OpMode {
 
     // time-tracking
     private double last_time = 0.0;
+    ArrayList<Double> times = new ArrayList<>();
 
     @Override
     public void init() {
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
         telemetry.addData("status", "startup");
         telemetry.update();
 
@@ -105,31 +114,19 @@ public class KiwiDrive extends OpMode {
         // before a user presses Stop (◼) on the Driver Station
 
         double diff = time - last_time;
+        times.add(new Double(diff));
+        if (times.size() > 5) {
+            times.remove(0);
+        }
+        double avg_diff = 0.0;
+        for (Double d : times) {
+            avg_diff += d;
+        }
+        avg_diff = avg_diff / times.size();
+
         last_time = time;
 
         telemetry.addData("time", time);
-
-        if (false) {
-            String detected_colour = "unknown";
-            int r = colour.red();
-            int g = colour.green();
-            int b = colour.blue();
-            int max = Math.max(colour.alpha(), Math.max(b, Math.max(r, g)));
-            if (r == max) {
-                detected_colour = "red";
-            }
-            if (g == max) {
-                detected_colour = "green";
-            }
-            if (b == max) {
-                detected_colour = "blue";
-            }
-            telemetry.addData(
-                    "colour",
-                    String.format("colour: red=%d green=%d blue=%d max=%d detected=%s", r, g, b, max, detected_colour)
-            );
-        }
-
 
         // let FTCLib updates its button status
         // VERY IMPORTANT: only do this _once_ per loop (e.g. not in
@@ -147,6 +144,28 @@ public class KiwiDrive extends OpMode {
         }
         drivebase.do_drive_updates(gamepadex1, telemetry, slow_override);
         elevator.do_elevator_updates(gamepadex2, telemetry);
+
+        // for the FTC dashboard
+        telemetry.addData(
+            "left",
+            drivebase.motor_left.encoder.getRawVelocity()
+        );
+        telemetry.addData(
+            "right",
+            drivebase.motor_right.encoder.getRawVelocity()
+        );
+        telemetry.addData(
+            "slide",
+            drivebase.motor_slide.encoder.getRawVelocity()
+        );
+
+        // raw encoders
+        telemetry.addData("left_encoder", drivebase.motor_left.encoder.getPosition());
+        telemetry.addData("right_encoder", drivebase.motor_right.encoder.getPosition());
+        telemetry.addData("slide_encoder", drivebase.motor_slide.encoder.getPosition());
+
+        telemetry.addData("diff", diff);
+        telemetry.addData("diff_avg", avg_diff);
 
         telemetry.update();
     }
