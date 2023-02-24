@@ -124,7 +124,7 @@ public class DriveTest extends OpMode {
         drivebase.dead.update(drivebase, telemetry);
 
         if (time >= 15.0 && time < 17.0) {
-            drivebase.drive.driveFieldCentric(0, -0.5, 0, heading);
+            drivebase.drive.driveFieldCentric(0, -1.0, 0, heading);
         } else {
             drivebase.drive.driveFieldCentric(0, 0, 0, heading);
         }
@@ -146,11 +146,12 @@ public class DriveTest extends OpMode {
         TelemetryPacket p = new TelemetryPacket();
         // we Strongly Suspect the field is in "inches" in the dashboard... hence "25.4"
         //
+        double mm_per_tick = (2.0 * Math.PI * 43) / 294.0;
         p.fieldOverlay()
             .setStrokeWidth(1)
             .setStroke("red")
             .setFill("black")
-            .fillCircle(drivebase.dead.pos_x / 25.4, drivebase.dead.pos_y / 25.4, 5);
+            .fillCircle((drivebase.dead.pos_x * mm_per_tick) / 25.4, (drivebase.dead.pos_y * mm_per_tick) / 25.4, 5);
         dashboard.sendTelemetryPacket(p);
 
         // raw encoders
@@ -158,6 +159,8 @@ public class DriveTest extends OpMode {
         telemetry.addData("encoder_right", drivebase.motor_right.encoder.getPosition());
         telemetry.addData("encoder_slide", drivebase.motor_slide.encoder.getPosition());
 
+        // max when doing -1.0 input to drive forward seems to be about 600
+        // so actual-max should be bigger?
         telemetry.addData("vel_left", drivebase.motor_left.encoder.getRawVelocity());
         telemetry.addData("vel_right", drivebase.motor_right.encoder.getRawVelocity());
         telemetry.addData("vel_slide", drivebase.motor_slide.encoder.getRawVelocity());

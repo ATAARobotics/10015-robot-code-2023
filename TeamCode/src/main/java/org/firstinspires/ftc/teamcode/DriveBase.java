@@ -63,11 +63,7 @@ public class DriveBase extends Object {
     // controller-mode
     private int mode = 2;  // default
 
-    // for the "remember last vector" mode
-    private int left_enc = 0;
-    private int right_enc = 0;
-    private int slide_enc = 0;
-
+    public DeadReckon dead = null;
 
     public DriveBase(HardwareMap hardwareMap) {
         // initialize IMU
@@ -84,6 +80,8 @@ public class DriveBase extends Object {
         double ticks_per_rev = 294.0;
         double max_rpm = 505.0;
 
+        dead = new DeadReckon();
+
         // initialize motors
         motor_left = new Motor(hardwareMap, "left", ticks_per_rev, max_rpm);
         motor_right = new Motor(hardwareMap, "right", ticks_per_rev, max_rpm);
@@ -96,9 +94,13 @@ public class DriveBase extends Object {
         motor_left.setRunMode(Motor.RunMode.VelocityControl);
         motor_right.setRunMode(Motor.RunMode.VelocityControl);
         motor_slide.setRunMode(Motor.RunMode.VelocityControl);
-        motor_left.setVeloCoefficients(0.9, 0.1, 0);
-        motor_right.setVeloCoefficients(0.9, 0.1, 0);
-        motor_slide.setVeloCoefficients(0.9, 0.1, 0);
+
+        // not sure what to do here, tuning-wise (max velocity seems
+        // ~"600" from getRawVelocity -- assuming that's "ticks per
+        // second"?
+        motor_left.setVeloCoefficients(0.65, 0.3, 0);
+        motor_right.setVeloCoefficients(0.65, 0.3, 0);
+        motor_slide.setVeloCoefficients(0.65, 0.3, 0);
 
         motor_left.setInverted(false);
         motor_right.setInverted(false);
@@ -128,6 +130,7 @@ public class DriveBase extends Object {
         motor_left.resetEncoder();
         motor_right.resetEncoder();
         motor_slide.resetEncoder();
+        dead.reset();
     }
 
     // call this repeatedly from the OpMode.loop() function to "do"
@@ -150,17 +153,8 @@ public class DriveBase extends Object {
             // if ONLY right-trigger "pressed"
             max_speed = 0.65;
         }
+        max_speed = 0.65;
         drive.setMaxSpeed(max_speed);
-        telemetry.addData("max_speed", max_speed);
-        telemetry.addData(
-            "velocity",
-            String.format(
-                "l=%.2f r=%.2f s=%.2f",
-                motor_left.encoder.getRawVelocity(),
-                motor_right.encoder.getRawVelocity(),
-                motor_slide.encoder.getRawVelocity()
-            )
-        );
 
         if (mode == 0) {
             // simple at first: left-strick forward/back + turn
@@ -177,7 +171,10 @@ public class DriveBase extends Object {
             );
         } else if (mode == 2) {
             double heading = - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            heading += 0.9; // we think there's absolute error
+            // XXX?
+            // heading += 0.9; // we think there's absolute error
+
+            dead.update(this, telemetry);
             telemetry.addData("heading", heading);
 
             drive.driveFieldCentric(

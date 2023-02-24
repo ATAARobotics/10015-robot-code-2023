@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -60,9 +61,11 @@ public class KiwiDrive extends OpMode {
     private double last_time = 0.0;
     ArrayList<Double> times = new ArrayList<>();
 
+    private FtcDashboard dashboard;
+
     @Override
     public void init() {
-        FtcDashboard dashboard = FtcDashboard.getInstance();
+        dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         telemetry.addData("status", "startup");
@@ -76,6 +79,7 @@ public class KiwiDrive extends OpMode {
 
         // let the drivebase set itself up
         drivebase = new DriveBase(hardwareMap);
+        drivebase.reset();
 
         // elevator setup
         elevator = new Elevator(hardwareMap);
@@ -105,6 +109,7 @@ public class KiwiDrive extends OpMode {
             drivebase.imu.resetYaw();
             // ensure we have "zero" at the bottom of our elevator
             elevator.motor_elevator.resetEncoder();
+            drivebase.dead.reset();
         }
     }
 
@@ -114,6 +119,8 @@ public class KiwiDrive extends OpMode {
         // before a user presses Stop (◼) on the Driver Station
 
         double diff = time - last_time;
+
+        // running-average of our cycle-time
         times.add(new Double(diff));
         if (times.size() > 5) {
             times.remove(0);
@@ -123,9 +130,7 @@ public class KiwiDrive extends OpMode {
             avg_diff += d;
         }
         avg_diff = avg_diff / times.size();
-
         last_time = time;
-
         telemetry.addData("time", time);
 
         // let FTCLib updates its button status
@@ -159,10 +164,23 @@ public class KiwiDrive extends OpMode {
             drivebase.motor_slide.encoder.getRawVelocity()
         );
 
+        TelemetryPacket p = new TelemetryPacket();
+        // we Strongly Suspect the field is in "inches" in the dashboard... hence "25.4"
+        p.fieldOverlay()
+            .setStrokeWidth(1)
+            .setStroke("red")
+            .setFill("black")
+            .fillCircle(drivebase.dead.pos_x / 25.4, drivebase.dead.pos_y / 25.4, 5);
+        dashboard.sendTelemetryPacket(p);
+
         // raw encoders
         telemetry.addData("left_encoder", drivebase.motor_left.encoder.getPosition());
         telemetry.addData("right_encoder", drivebase.motor_right.encoder.getPosition());
         telemetry.addData("slide_encoder", drivebase.motor_slide.encoder.getPosition());
+
+        telemetry.addData("vel_left", drivebase.motor_left.encoder.getRawVelocity());
+        telemetry.addData("vel_right", drivebase.motor_right.encoder.getRawVelocity());
+        telemetry.addData("vel_slide", drivebase.motor_slide.encoder.getRawVelocity());
 
         telemetry.addData("diff", diff);
         telemetry.addData("diff_avg", avg_diff);

@@ -73,9 +73,9 @@ public class DeadReckon extends Object {
         double mm_per_tick = (2.0 * Math.PI * 43) / 294.0;
 
         // 2. convert movements to mm
-        left = left * mm_per_tick;
-        right = right * mm_per_tick;
-        slide = slide * mm_per_tick;
+        //left = left * mm_per_tick;
+        //right = right * mm_per_tick;
+        //slide = slide * mm_per_tick;
 
         double theta = Math.toRadians(30);
         // 2. apply rotation matrix, yielding x, y values for motion
@@ -87,11 +87,11 @@ public class DeadReckon extends Object {
         double factor = 0.6159760225629736;
 
         // 3. convert to X and Y values
-        pos_x += (moved_x * factor);
-        pos_y += (moved_y * factor);
+        pos_x += moved_x;//(moved_x * factor);
+        pos_y += moved_y;//(moved_y * factor);
 
-        telemetry.addData("pos_x", pos_x);
-        telemetry.addData("pos_y", pos_y);
+        telemetry.addData("pos_x", pos_x * mm_per_tick);
+        telemetry.addData("pos_y", pos_y * mm_per_tick);
     }
 
 }

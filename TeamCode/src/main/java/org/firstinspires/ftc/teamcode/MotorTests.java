@@ -173,48 +173,25 @@ public class MotorTests extends LinearOpMode {
             gamepadex1.readButtons();
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
+            if (gamepadex1.wasJustPressed(GamepadKeys.Button.A)) {
+                drivebase.motor_left.setPositionCoefficient(0.02);
+                drivebase.motor_left.setRunMode(Motor.RunMode.PositionControl);
+                drivebase.motor_right.setPositionCoefficient(0.02);
+                drivebase.motor_right.setRunMode(Motor.RunMode.PositionControl);
+                // should be 30cm forward
+                drivebase.motor_left.setTargetPosition(274);
+                drivebase.motor_right.setTargetPosition(-274);
+            }
+
             if (gamepadex1.isDown(GamepadKeys.Button.A)) {
-                if (gamepadex1.wasJustPressed(GamepadKeys.Button.A)) {
-                    left_start = time;
+                if (!drivebase.motor_left.atTargetPosition()) {
+                    drivebase.motor_left.set(0.15);
                 }
-                drivebase.motor_left.setRunMode(Motor.RunMode.RawPower);
-                // approach full power in 3 seconds
-                drivebase.motor_left.set(Math.min(1.0, (time - left_start) / 3.0));
-            } else {
-                drivebase.motor_left.setRunMode(Motor.RunMode.VelocityControl);
-                drivebase.motor_left.set(0.0);
+                if (!drivebase.motor_right.atTargetPosition()) {
+                    drivebase.motor_right.set(0.15);
+                }
             }
 
-            if (gamepadex1.isDown(GamepadKeys.Button.B)) {
-                if (gamepadex1.wasJustPressed(GamepadKeys.Button.B)) {
-                    right_start = time;
-                }
-                drivebase.motor_right.setRunMode(Motor.RunMode.RawPower);
-                // approach full power in 3 seconds
-                drivebase.motor_right.set(Math.min(1.0, (time - right_start) / 3.0));
-            } else {
-                drivebase.motor_right.setRunMode(Motor.RunMode.VelocityControl);
-                drivebase.motor_right.set(0.0);
-            }
-
-            if (gamepadex1.isDown(GamepadKeys.Button.X)) {
-                if (gamepadex1.wasJustPressed(GamepadKeys.Button.X)) {
-                    slide_start = time;
-                }
-                drivebase.motor_slide.setRunMode(Motor.RunMode.RawPower);
-                // approach full power in 3 seconds
-                drivebase.motor_slide.set(Math.min(1.0, (time - slide_start) / 3.0));
-            } else {
-                drivebase.motor_slide.setRunMode(Motor.RunMode.VelocityControl);
-                drivebase.motor_slide.set(0.0);
-            }
-
-            telemetry.addData("time", time);
-            telemetry.addData("heading", heading);
-            telemetry.addData(
-                "colour",
-                String.format("r=%d g=%d b=%d", colour.red(), colour.green(), colour.blue())
-            );
             telemetry.addData(
                 "left",
                 String.format(
