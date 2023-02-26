@@ -1,3 +1,25 @@
+
+TODO:
+
+ * ftc dashboard
+ - tune PIDs
+   - figure out max speed under load
+     for left/right looks like "just under 2000 ticks/s" is max
+   - graph PID shit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## NOTICE
 
 This repository contains the public FTC SDK for the Freight Frenzy (2021-2022) competition season.
