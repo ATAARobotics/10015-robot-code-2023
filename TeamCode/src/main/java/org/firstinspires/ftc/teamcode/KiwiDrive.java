@@ -14,6 +14,10 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -52,8 +56,19 @@ public class KiwiDrive extends OpMode {
     // time-tracking
     private double last_time = 0.0;
 
+    // our own velocity tracking
+    private double last_left = 0;
+    private double last_right = 0;
+    private double last_slide = 0;
+
+    private FtcDashboard dashboard;
+
     @Override
     public void init() {
+        // override the dashboard with FTC dashboard
+        dashboard = FtcDashboard.getInstance();
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
         telemetry.addData("status", "startup");
         telemetry.update();
 
@@ -121,6 +136,41 @@ public class KiwiDrive extends OpMode {
         }
         drivebase.do_drive_updates(gamepadex1, telemetry, slow_override);
         elevator.do_elevator_updates(gamepadex2, telemetry);
+
+        // our own velocity tracking
+        double vel_left = (drivebase.motor_left.encoder.getPosition() - last_left) / diff;
+        double vel_right = (drivebase.motor_right.encoder.getPosition() - last_right) / diff;
+        double vel_slide = (drivebase.motor_slide.encoder.getPosition() - last_slide) / diff;
+        last_left = drivebase.motor_left.encoder.getPosition();
+        last_right = drivebase.motor_right.encoder.getPosition();
+        last_slide = drivebase.motor_slide.encoder.getPosition();
+        telemetry.addData("vel_left", vel_left);
+        telemetry.addData("vel_right", vel_right);
+        telemetry.addData("vel_slide", vel_slide);
+
+        // for the FTC dashboard
+        telemetry.addData(
+            "left",
+            drivebase.motor_left.encoder.getRawVelocity()
+        );
+        telemetry.addData(
+            "right",
+            drivebase.motor_right.encoder.getRawVelocity()
+        );
+        telemetry.addData(
+            "slide",
+            drivebase.motor_slide.encoder.getRawVelocity()
+        );
+
+        // can draw, if we have dead-reckoning code again
+        TelemetryPacket p = new TelemetryPacket();
+        // we Strongly Suspect the field is in "inches" in the dashboard... hence "25.4"
+        // p.fieldOverlay()
+        //     .setStrokeWidth(1)
+        //     .setStroke("red")
+        //     .setFill("black")
+        //     .fillCircle(drivebase.dead.pos_x / 25.4, drivebase.dead.pos_y / 25.4, 5);
+        // dashboard.sendTelemetryPacket(p);
 
         telemetry.update();
     }

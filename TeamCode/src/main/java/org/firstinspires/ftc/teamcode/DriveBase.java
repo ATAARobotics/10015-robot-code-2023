@@ -127,8 +127,6 @@ public class DriveBase extends Object {
         motor_slide.resetEncoder();
     }
 
-    
-
     // call this repeatedly from the OpMode.loop() function to "do"
     // the drive stuff from the given controller
     public void do_drive_updates(GamepadEx gamepadex, Telemetry telemetry, boolean slow_override) {

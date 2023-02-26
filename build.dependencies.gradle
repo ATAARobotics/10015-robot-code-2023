@@ -1,6 +1,10 @@
 repositories {
     mavenCentral()
     google() // Needed for androidx
+
+    // acme robotics dashboard
+    maven { url = 'https://maven.brott.dev' }
+
     flatDir {
         dirs rootProject.file('libs')
     }
@@ -18,5 +22,8 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite-task-vision:0.2.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'org.firstinspires.ftc:gameAssets-PowerPlay:1.0.0'
+
+    // acme robotics dashboard
+    implementation 'com.acmerobotics.dashboard:dashboard:0.4.8'
 }
 
