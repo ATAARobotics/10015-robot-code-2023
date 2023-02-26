@@ -49,8 +49,6 @@ public class KiwiDrive extends OpMode {
     private GamepadEx gamepadex1 = null;
     private GamepadEx gamepadex2 = null;
 
-    private ColorSensor colour = null;
-
     // time-tracking
     private double last_time = 0.0;
 
@@ -58,8 +56,6 @@ public class KiwiDrive extends OpMode {
     public void init() {
         telemetry.addData("status", "startup");
         telemetry.update();
-
-        //colour = hardwareMap.get(ColorSensor.class, "colour");
 
         // setup some controller listeners
         gamepadex1 = new GamepadEx(gamepad1);
@@ -108,28 +104,6 @@ public class KiwiDrive extends OpMode {
         last_time = time;
 
         telemetry.addData("time", time);
-
-        if (false) {
-            String detected_colour = "unknown";
-            int r = colour.red();
-            int g = colour.green();
-            int b = colour.blue();
-            int max = Math.max(colour.alpha(), Math.max(b, Math.max(r, g)));
-            if (r == max) {
-                detected_colour = "red";
-            }
-            if (g == max) {
-                detected_colour = "green";
-            }
-            if (b == max) {
-                detected_colour = "blue";
-            }
-            telemetry.addData(
-                    "colour",
-                    String.format("colour: red=%d green=%d blue=%d max=%d detected=%s", r, g, b, max, detected_colour)
-            );
-        }
-
 
         // let FTCLib updates its button status
         // VERY IMPORTANT: only do this _once_ per loop (e.g. not in

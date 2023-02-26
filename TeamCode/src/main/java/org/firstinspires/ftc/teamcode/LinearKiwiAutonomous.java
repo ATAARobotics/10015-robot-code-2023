@@ -83,12 +83,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     private DriveBase drivebase = null;
     private Elevator elevator = null;
 
-    private ColorSensor colour = null;
-    private DistanceSensor distance = null;
-    public int the_code = -1;
-
     private OpenCvCamera camera = null;
-
 
     private void ensure_stop(double heading) {
         /// ideally shouldn't need this, but .. here we are
@@ -397,11 +392,6 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
         telemetry.addData("status", "startup");
         telemetry.update();
-
-        colour = hardwareMap.get(ColorSensor.class, "colour");
-        colour.enableLed(true);
-
-        distance = hardwareMap.get(DistanceSensor.class, "colour");
 
         // let the drivebase set itself up
         drivebase = new DriveBase(hardwareMap);

@@ -69,12 +69,6 @@ public class OpenCv extends LinearOpMode {
     private Elevator elevator = null;
     private GamepadEx gamepadex1 = null;
 
-    private ColorSensor colour = null;
-    private DistanceSensor distance = null;
-    public String the_code = null;
-
-
-
     private void ensure_stop(double heading) {
         /// ideally shouldn't need this, but .. here we are
         drivebase.drive.driveFieldCentric(0.0, 0.0, 0.0, heading);
@@ -134,11 +128,6 @@ public class OpenCv extends LinearOpMode {
 
         telemetry.addData("status", "startup");
         telemetry.update();
-
-        colour = hardwareMap.get(ColorSensor.class, "colour");
-        colour.enableLed(true);
-
-        distance = hardwareMap.get(DistanceSensor.class, "colour");
 
         // let the drivebase set itself up
         drivebase = new DriveBase(hardwareMap);
