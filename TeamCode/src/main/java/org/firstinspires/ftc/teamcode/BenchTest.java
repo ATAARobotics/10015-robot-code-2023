@@ -63,7 +63,7 @@ public class BenchTest extends LinearOpMode {
     private Elevator elevator = null;
 
     private OpenCvCamera camera = null;
-
+    public int the_code = -1;
 
     private void ensure_stop(double heading) {
         /// ideally shouldn't need this, but .. here we are
