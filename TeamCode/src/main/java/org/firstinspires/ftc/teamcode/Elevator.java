@@ -74,11 +74,11 @@ public class Elevator extends Object {
         servo_claw_right.scaleRange(0.0, 1.0);
     }
 
-    public void close_claw() {
+    public void open_claw() {
         servo_claw_left.setPosition(0.00);
         servo_claw_right.setPosition(1.00);
     }
-    public void open_claw() {
+    public void close_claw() {
         servo_claw_left.setPosition(1.0);
         servo_claw_right.setPosition(0.0);
     }
