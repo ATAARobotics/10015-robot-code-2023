@@ -440,7 +440,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         todo.add(new ElevatorAction(300, 0.15));
         todo.add(new DriveAction(0.0, -0.5, 0.0, .2 * field_factor)); // ahead
         todo.add(new TurnAction(-0.2, -89.0));  // turn to line up sensor
-        todo.add(new DriveAction(-0.4, 0.0, 0.0, 0.6 * field_factor)); // strafe a bit
+        todo.add(new DriveAction(-0.4, 0.0, 0.0, 1.3 * field_factor)); // strafe a bit
         todo.add(new DetermineCodeAction(this, 6.0));
 
         drivebase.reset();
