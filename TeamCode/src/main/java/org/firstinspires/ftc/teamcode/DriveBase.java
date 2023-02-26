@@ -81,9 +81,11 @@ public class DriveBase extends Object {
         imu.initialize(imu_params);
 
         // initialize motors
-        motor_left = new Motor(hardwareMap, "left");
-        motor_right = new Motor(hardwareMap, "right");
-        motor_slide = new Motor(hardwareMap, "slide");
+        double ticks_per_rev = 294.0;
+        double max_rpm = 368.0; // about 1800 ticks/s experimentally, under load
+        motor_left = new Motor(hardwareMap, "left", ticks_per_rev, max_rpm);
+        motor_right = new Motor(hardwareMap, "right", ticks_per_rev, max_rpm);
+        motor_slide = new Motor(hardwareMap, "slide", ticks_per_rev, max_rpm);
 
         motor_left.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
@@ -93,9 +95,9 @@ public class DriveBase extends Object {
         motor_right.setRunMode(Motor.RunMode.VelocityControl);
         motor_slide.setRunMode(Motor.RunMode.VelocityControl);
 
-        //motor_left.setVeloCoefficients(0.64, 0.3, 0.0);
-        //motor_right.setVeloCoefficients(0.64, 0.3, 0.0);
-        //motor_slide.setVeloCoefficients(0.64, 0.3, 0.0);
+        //motor_left.setVeloCoefficients( 0.0000002, 0.0, 0.0);
+        //motor_right.setVeloCoefficients(0.0000002, 0.0, 0.0);
+        //motor_slide.setVeloCoefficients(0.0000002, 0.0, 0.0);
 
         motor_left.setInverted(false);
         motor_right.setInverted(false);
