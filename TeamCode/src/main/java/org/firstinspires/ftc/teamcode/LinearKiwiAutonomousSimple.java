@@ -60,11 +60,11 @@ import org.firstinspires.ftc.teamcode.LinearKiwiAutonomous;
 
 @Autonomous(name="Kiwi: Simple Autonomous (RIGHT)", group="Autonomous")
 public class LinearKiwiAutonomousSimple extends LinearKiwiAutonomous {
-    
+
     // to traverse "one tile" is XXX seconds? 2.5?
 
     public void add_todo_list_post_detection(List<Action> todo, double field_factor, int code_number) {
-        todo.add(new DriveAction(-0.5, 0, 0.0, 2.24 * field_factor)); // west
+        todo.add(new DriveAction(-0.5, 0, 0.0, 2.30 * field_factor)); // west
         todo.add(new DriveAction(0.0, -0.5, 0.0, 2.80 * field_factor)); // north
         todo.add(new ElevatorAction(1700, 0.15)); //go to high position
         todo.add(new DriveAction(-0.5, 0, 0.0, 0.42 * field_factor)); // west
