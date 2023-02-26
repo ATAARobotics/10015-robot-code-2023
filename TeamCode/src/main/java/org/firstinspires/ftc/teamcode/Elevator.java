@@ -141,9 +141,9 @@ public class Elevator extends Object {
             } else if (left_stick < -0.05) {
                 motor_elevator.setRunMode(Motor.RunMode.RawPower);
                 if (motor_elevator.getCurrentPosition() > elevator_low_limit) {
-                    // go really slow if we're close to the bottom
+                     //go really slow if we're close to the bottom
                     if (motor_elevator.getCurrentPosition() < 400) {
-                        motor_elevator.set(elevator_speed * left_stick * 0.1);
+                        motor_elevator.set(elevator_speed * left_stick * 0.2);
                     } else {
                         motor_elevator.set(elevator_speed * left_stick * 0.2);
                     }
