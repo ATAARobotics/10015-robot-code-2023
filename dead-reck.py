@@ -19,3 +19,17 @@ print(1188.6867631904156 * factor)
 # (couple different tests found these values instead)
 # encoder-left 260
 # encoder-right -262
+
+# caliper wheel: 87.5 mm is diameter
+
+import math
+print("---")
+
+circ = math.pi * 87.5 # mm
+ticks_per_rev = 294 # ticks
+mm_per_tick = circ / ticks_per_rev
+
+dist = mm_per_tick * 277.0
+print(dist)
+actual = dist / math.cos(math.radians(30))
+print(actual)
