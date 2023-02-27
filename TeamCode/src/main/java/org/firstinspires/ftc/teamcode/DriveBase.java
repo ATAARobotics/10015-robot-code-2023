@@ -95,9 +95,10 @@ public class DriveBase extends Object {
         motor_right.setRunMode(Motor.RunMode.VelocityControl);
         motor_slide.setRunMode(Motor.RunMode.VelocityControl);
 
-        //motor_left.setVeloCoefficients( 0.0000002, 0.0, 0.0);
-        //motor_right.setVeloCoefficients(0.0000002, 0.0, 0.0);
-        //motor_slide.setVeloCoefficients(0.0000002, 0.0, 0.0);
+        // tuned; looks good, needs testing with auto etc
+        motor_left.setVeloCoefficients( 0.9, 0.09, 0.0);
+        motor_right.setVeloCoefficients(0.9, 0.09, 0.0);
+        motor_slide.setVeloCoefficients(0.9, 0.09, 0.0);
 
         motor_left.setInverted(false);
         motor_right.setInverted(false);
