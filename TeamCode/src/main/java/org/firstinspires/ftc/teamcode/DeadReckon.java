@@ -45,6 +45,7 @@ public class DeadReckon extends Object {
     public int last_slide;
     public int last_left;
     public int last_right;
+    public ArrayList<Double> headings = new ArrayList<>();
 
     public DeadReckon() {
         reset();
@@ -59,39 +60,62 @@ public class DeadReckon extends Object {
     }
 
     public void update(DriveBase drive, Telemetry telemetry) {
+        // XXX caller should tell this code "we will turn next time"
+        // ... so short-circuit any imu integration and do the last
+        // vector
+
         // dead-reckoning
-        // 1. how far has each wheel spun? (in TICKs!)
-        double left = drive.motor_left.encoder.getPosition() - last_left;
-        double right = drive.motor_right.encoder.getPosition() - last_right;
-        double slide = drive.motor_slide.encoder.getPosition() - last_slide;
-        last_left = drive.motor_left.encoder.getPosition();
-        last_right = drive.motor_right.encoder.getPosition();
-        last_slide = drive.motor_slide.encoder.getPosition();
+        // 1. collect an IMU heading, add to filter list
+        headings.add(new Double(drive.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)));
+        if (headings.size() < 5) {
+            return;
+        }
 
-        // XXX allegedly the wheel is 90mm accross
-        // TODO: caliper our exact wheels at buildspace
-        double mm_per_tick = (2.0 * Math.PI * 43) / 294.0;
+        // 2. find average heading
+        double head = 0.0;
+        for (Double d : headings) {
+            head += d;
+        }
+        head = head / headings.size();
+        headings.removeAll();
 
-        // 2. convert movements to mm
-        //left = left * mm_per_tick;
-        //right = right * mm_per_tick;
-        //slide = slide * mm_per_tick;
+        // 3. find the wheel closest to our robot-centric heading
+        // ...that is, wheel with less max angle offset to 0
+        double diff_right = heading - 60.0;
+        double diff_slide = heading - 180.0;
+        double diff_left = heading - 300.0;
+        double min_diff = Math.min(diff_left, Math.min(diff_right, diff_slide));
 
-        double theta = Math.toRadians(30);
-        // 2. apply rotation matrix, yielding x, y values for motion
-        double moved_y = (-left * Math.cos(theta)) + (right * Math.cos(theta));
-        double moved_x = (left * Math.sin(theta)) + (right * Math.sin(theta)) - slide;
+        double ticks = 0.0;
+        if (min_diff == diff_right) ticks = drive.motor_right.encoder.getPosition();
+        if (min_diff == diff_left) ticks = drive.motor_left.encoder.getPosition();
+        if (min_diff == diff_slide) ticks = drive.motor_slide.encoder.getPosition();
 
-        // this is wrong, so we try to adjust by some "empirically computed" factor
-        // ...or the math is just fucked
-        double factor = 0.6159760225629736;
+        // caliber says 87.5mm diameter, measured 294 ticks/rev
+        // (could do ticks/rev at higher rev count than 1?)
+        double mm_per_tick = (Math.PI * 87.5) / 294.0;
+        double distance = ticks * mm_per_tick;
+
+        // okay, so now we know that we've moved "distance" along the
+        // "maximum wheel" direction .. and that the difference
+        // between that and our actual direction is "min_diff"
+        // degrees.
+
+        double actual_distance = distance / Math.sin(Math.toRadians(min_diff));
+
+        // that "actual distance" above is along "heading" .. which is
+        // in absolute / field co-ordinates already .. so we just need
+        // the X + Y portions of it.
+
+        double moved_x = actual_distance * Math.cos(head);
+        double moved_y = actual_distance * Math.sin(head);
 
         // 3. convert to X and Y values
         pos_x += moved_x;//(moved_x * factor);
         pos_y += moved_y;//(moved_y * factor);
 
-        telemetry.addData("pos_x", pos_x * mm_per_tick);
-        telemetry.addData("pos_y", pos_y * mm_per_tick);
+        telemetry.addData("pos_x", pos_x);
+        telemetry.addData("pos_y", pos_y);
     }
 
 }
