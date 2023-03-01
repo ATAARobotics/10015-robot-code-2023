@@ -105,6 +105,7 @@ public class KiwiDrive extends OpMode {
         if (gamepadex1.isDown(GamepadKeys.Button.A) || gamepadex1.isDown(GamepadKeys.Button.X)) {
             // make sure robot starts at correct position
             drivebase.imu.resetYaw();
+            drivebase.reset();
             // ensure we have "zero" at the bottom of our elevator
             elevator.motor_elevator.resetEncoder();
         }
@@ -148,6 +149,10 @@ public class KiwiDrive extends OpMode {
         telemetry.addData("vel_right", vel_right);
         telemetry.addData("vel_slide", vel_slide);
 
+        telemetry.addData("set_left", drivebase.motor_left.get());
+        telemetry.addData("set_right", drivebase.motor_right.get());
+        telemetry.addData("set_slide", drivebase.motor_slide.get());
+
         // for the FTC dashboard
         telemetry.addData(
             "left",
@@ -162,15 +167,17 @@ public class KiwiDrive extends OpMode {
             drivebase.motor_slide.encoder.getRawVelocity()
         );
 
-        // can draw, if we have dead-reckoning code again
-        TelemetryPacket p = new TelemetryPacket();
-        // we Strongly Suspect the field is in "inches" in the dashboard... hence "25.4"
-        // p.fieldOverlay()
-        //     .setStrokeWidth(1)
-        //     .setStroke("red")
-        //     .setFill("black")
-        //     .fillCircle(drivebase.dead.pos_x / 25.4, drivebase.dead.pos_y / 25.4, 5);
-        // dashboard.sendTelemetryPacket(p);
+        if (false) {
+            // can draw, if we have dead-reckoning code again
+            TelemetryPacket p = new TelemetryPacket();
+            // we Strongly Suspect the field is in "inches" in the dashboard... hence "25.4"
+            p.fieldOverlay()
+                .setStrokeWidth(1)
+                .setStroke("red")
+                .setFill("black")
+                .fillCircle(drivebase.dead.pos_x / 25.4, drivebase.dead.pos_y / 25.4, 5);
+            dashboard.sendTelemetryPacket(p);
+        }
 
         telemetry.update();
     }

@@ -37,7 +37,7 @@ import com.arcrobotics.ftclib.gamepad.ButtonReader;
 import com.arcrobotics.ftclib.gamepad.TriggerReader;
 import com.arcrobotics.ftclib.controller.PIDController;
 
-
+import org.firstinspires.ftc.teamcode.DeadReckon;
 
 
 
@@ -63,10 +63,8 @@ public class DriveBase extends Object {
     // controller-mode
     private int mode = 2;  // default
 
-    // for the "remember last vector" mode
-    private int left_enc = 0;
-    private int right_enc = 0;
-    private int slide_enc = 0;
+    // dead-reckoning
+    public DeadReckon dead = null;
 
 
     public DriveBase(HardwareMap hardwareMap) {
@@ -83,6 +81,8 @@ public class DriveBase extends Object {
         // initialize motors
         double ticks_per_rev = 294.0;
         double max_rpm = 368.0; // about 1800 ticks/s experimentally, under load
+        dead = new DeadReckon();
+
         motor_left = new Motor(hardwareMap, "left", ticks_per_rev, max_rpm);
         motor_right = new Motor(hardwareMap, "right", ticks_per_rev, max_rpm);
         motor_slide = new Motor(hardwareMap, "slide", ticks_per_rev, max_rpm);
@@ -95,10 +95,14 @@ public class DriveBase extends Object {
         motor_right.setRunMode(Motor.RunMode.VelocityControl);
         motor_slide.setRunMode(Motor.RunMode.VelocityControl);
 
+        motor_left.setBuffer(1.0);
+        motor_right.setBuffer(1.0);
+        motor_slide.setBuffer(1.0);
+
         // tuned; looks good, needs testing with auto etc
-        motor_left.setVeloCoefficients( 0.9, 0.09, 0.0);
-        motor_right.setVeloCoefficients(0.9, 0.09, 0.0);
-        motor_slide.setVeloCoefficients(0.9, 0.09, 0.0);
+        motor_left.setVeloCoefficients( 0.9, 0.2, 0.0);
+        motor_right.setVeloCoefficients(0.9, 0.2, 0.0);
+        motor_slide.setVeloCoefficients(0.9, 0.2, 0.0);
 
         motor_left.setInverted(false);
         motor_right.setInverted(false);
@@ -128,6 +132,7 @@ public class DriveBase extends Object {
         motor_left.resetEncoder();
         motor_right.resetEncoder();
         motor_slide.resetEncoder();
+        dead.reset();
     }
 
     // call this repeatedly from the OpMode.loop() function to "do"
@@ -168,7 +173,9 @@ public class DriveBase extends Object {
             );
         } else if (mode == 2) {
             double heading = - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            // XXX is there? try again?
             heading += 0.9; // we think there's absolute error
+
             telemetry.addData("heading", heading);
 
             drive.driveFieldCentric(
@@ -178,6 +185,8 @@ public class DriveBase extends Object {
                 -gamepadex.gamepad.right_stick_x * 0.75,
                 heading
             );
+
+            dead.update(this, telemetry, heading);
         }
     }
 }
