@@ -163,7 +163,7 @@ public class DriveBase extends Object {
         }
         else if (gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
             // if ONLY right-trigger "pressed"
-            max_speed = 0.70;
+            max_speed = 0.71;
         }
         drive.setMaxSpeed(max_speed);
         telemetry.addData("max_speed", max_speed);
@@ -190,7 +190,7 @@ public class DriveBase extends Object {
                 gamepadex.gamepad.left_stick_x,
                 gamepadex.gamepad.left_stick_y,
                 // angelika likes backwards stick
-                -gamepadex.gamepad.right_stick_x * 0.75,
+                -gamepadex.gamepad.right_stick_x * 0.69,
                 heading
             );
         }
