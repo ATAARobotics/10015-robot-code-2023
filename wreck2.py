@@ -61,3 +61,11 @@ print("x", x)
 print("ZZZ", ((1473.0 * mm_per_tick) / math.sin(math.radians(60))))
 print("ZZZ", (((1483.0 + 1347) / 2.0 * mm_per_tick) / math.sin(math.radians(60))))
 print("ZZZ", (1483.0 * mm_per_tick) / math.sin(math.radians(60)))
+
+
+# 738 almost exactly (per side) ticks
+# measured  63.8cm
+
+# 69cm was ??? ticks (encoders reset??)
+
+# 71cm was -768, 794, -41
