@@ -121,6 +121,7 @@ public class Wreck extends LinearOpMode {
 
         double heading;
         double start = time;
+        double stick_x = 0.0;
         double stick_y = -0.5;
 
         List<Double> headings = new ArrayList<Double>();
@@ -157,8 +158,8 @@ public class Wreck extends LinearOpMode {
                 double turn = heading_control.calculate(heading, desired_heading);
                 telemetry.addData("pid_turn", turn);
                 // PID turn output is pretty aggressive
-                //drivebase.drive.driveFieldCentric(0.0, stick_y, turn / 5.0, heading);
-                drivebase.drive.driveFieldCentric(0.0, stick_y, 0.0, heading);
+                //drivebase.drive.driveFieldCentric(stick_x, stick_y, turn, heading);
+                drivebase.drive.driveFieldCentric(stick_x, stick_y, 0.0, heading);
                 drivebase.dead.update(drivebase, telemetry, heading);
                 telemetry.addData("enc_left", drivebase.motor_left.encoder.getPosition());
                 telemetry.addData("enc_right", drivebase.motor_right.encoder.getPosition());
@@ -166,7 +167,7 @@ public class Wreck extends LinearOpMode {
                 //if (total_distance < 300.0 && time - start <= 2.0) {
                 if (time - start <= 3.0) {
                     headings.add(heading);
-                    total_distance = distanceTravelled(
+                    total_distance = distanceTravelledForward(
                         headings,
                         drivebase.motor_left.encoder.getPosition(),
                         drivebase.motor_right.encoder.getPosition(),
@@ -174,6 +175,7 @@ public class Wreck extends LinearOpMode {
                         );
                     telemetry.addData("d", total_distance);
                 } else {
+                    stick_x = 0.0;
                     stick_y = 0.0;
                 }
                 telemetry.update();
@@ -190,26 +192,43 @@ public class Wreck extends LinearOpMode {
         avg_head = avg_head / headings.size();
         telemetry.addData("avg_head", avg_head);
 
-        double left_distance = (left * mm_per_tick) / Math.sin(Math.toRadians(60 - avg_head));
-        double right_distance = (right * mm_per_tick) / Math.sin(Math.toRadians(300 - avg_head));
-        double slide_distance = (slide * mm_per_tick) / Math.sin(Math.toRadians(180 - avg_head));
+        double left_distance = (left * mm_per_tick);
+        double right_distance = (right * mm_per_tick);
+        double slide_distance = (slide * mm_per_tick);
 
         telemetry.addData("travel_left", left_distance);
         telemetry.addData("travel_right", right_distance);
         telemetry.addData("travel_slide", slide_distance);
 
-        double dist = Math.min(left_distance, right_distance);
-        telemetry.addData("travel_avg", dist);
+        double leftover = ((right - left) * Math.cos(Math.toRadians(60))) * mm_per_tick;
+        telemetry.addData("travel_leftover", leftover);
 
-        double travel_no_slide = (((left * mm_per_tick) + (right * mm_per_tick)) * 4.0) / 3.0;
-        telemetry.addData("messing_around", travel_no_slide);
+        return (slide * mm_per_tick) + leftover;
+    }
 
-        double dx = dist * Math.cos(Math.toRadians(avg_head));
-        double dy = dist * Math.sin(Math.toRadians(avg_head));
-        telemetry.addData("moved_x", dx);
-        telemetry.addData("moved_y", dy);
+    public double distanceTravelledForward(List<Double> headings, double left, double right, double slide) {
+        double mm_per_tick = (Math.PI * 87.5) / 294.0;
+        double avg_head = 0.0;
+        for (Double d : headings) {
+            avg_head += d;
+        }
+        avg_head = avg_head / headings.size();
+        telemetry.addData("avg_head", avg_head);
 
-        return dist;
+        double left_distance = (left * mm_per_tick);
+        double right_distance = (right * mm_per_tick);
+
+        telemetry.addData("travel_left", left_distance);
+        telemetry.addData("travel_right", right_distance);
+
+        double fr = right_distance / Math.sin(Math.toRadians(60));
+        double fl = left_distance / Math.sin(Math.toRadians(-60));
+        telemetry.addData("travel_left_actual", fl);
+        telemetry.addData("travel_right_actual", fr);
+        telemetry.addData("travel_4/3", ((fl+fr) * 4.0) / 3.0);
+
+        return (fl + fr);
+        //return ((fl + fr) * 4.0) / 3.0;
     }
 }
 
