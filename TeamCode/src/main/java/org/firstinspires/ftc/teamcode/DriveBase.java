@@ -185,7 +185,7 @@ public class DriveBase extends Object {
             // XXX? we want this?
             heading += 0.9; // we think there's absolute error
 
-            dead.update(this, telemetry);
+            dead.update(this, telemetry, heading);
             telemetry.addData("heading", heading);
 
             drive.driveFieldCentric(

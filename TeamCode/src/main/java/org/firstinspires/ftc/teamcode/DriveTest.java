@@ -121,7 +121,7 @@ public class DriveTest extends OpMode {
 
         double heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
         telemetry.addData("heading", heading);
-        drivebase.dead.update(drivebase, telemetry);
+        drivebase.dead.update(drivebase, telemetry, heading);
 
         if (time >= 15.0 && time < 17.0) {
             drivebase.drive.driveFieldCentric(0, -1.0, 0, heading);

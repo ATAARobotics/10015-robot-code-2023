@@ -55,6 +55,10 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 import org.openftc.apriltag.AprilTagDetection;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
 //import org.firstinspires.ftc.teamcode.OpenCv.FindQrCodePipeline;
 
 
@@ -85,6 +89,8 @@ public class LinearKiwiAutonomous extends LinearOpMode {
 
     private OpenCvCamera camera = null;
     public int the_code = -1;
+
+    private FtcDashboard dashboard;
 
     private void ensure_stop(double heading) {
         /// ideally shouldn't need this, but .. here we are
@@ -258,6 +264,85 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         }
     }
 
+
+    public class DriveDistanceAction extends Action {
+        public double stick_x = 0.0;
+        public double stick_y = 0.0;
+        public double target_heading = 0.0;
+        public double target_distance = 0.0;
+        public double actual_distance = 0.0;
+        List<Double> headings = null;
+        public double start_left = 0.0;
+        public double start_right = 0.0;
+        public double start_slide = 0.0;
+        public PIDController heading_control = null;
+
+        public DriveDistanceAction(double x, double y, double th, double td) {
+            stick_x = x;
+            stick_y = y;
+            target_heading = th;
+            target_distance = td;
+            headings = new ArrayList<Double>();
+            heading_control = new PIDController(0.005, 0.0001, 0.0);
+        }
+
+        public void start(double t, DriveBase drivebase, Elevator elevator) {
+            start_left = drivebase.motor_left.encoder.getPosition();
+            start_right = drivebase.motor_right.encoder.getPosition();
+            start_slide = drivebase.motor_slide.encoder.getPosition();
+        }
+
+        public double distanceTravelled(List<Double> headings, double left, double right, double slide) {
+            double mm_per_tick = (Math.PI * 87.5) / 294.0;
+            double avg_head = 0.0;
+            for (Double d : headings) {
+                avg_head += d;
+            }
+            avg_head = avg_head / headings.size();
+            telemetry.addData("avg_head", avg_head);
+
+            double left_distance = (left * mm_per_tick);
+            double right_distance = (right * mm_per_tick);
+            double slide_distance = (slide * mm_per_tick);
+
+            telemetry.addData("travel_left", left_distance);
+            telemetry.addData("travel_right", right_distance);
+            telemetry.addData("travel_slide", slide_distance);
+
+            double leftover = ((right - left) * Math.cos(Math.toRadians(60))) * mm_per_tick;
+            telemetry.addData("travel_leftover", leftover);
+
+            return (slide * mm_per_tick) + leftover;
+        }
+
+        public void do_drive(double heading, DriveBase drivebase) {
+            headings.add(heading);
+            // XXX migth be nice to filter these? accum_heading etc
+            double turn = heading_control.calculate(heading, target_heading);
+            drivebase.drive.driveFieldCentric(stick_x, stick_y, turn, heading);
+            actual_distance = distanceTravelled(
+                headings,
+                drivebase.motor_left.encoder.getPosition() - start_left,
+                drivebase.motor_right.encoder.getPosition() - start_right,
+                drivebase.motor_slide.encoder.getPosition() - start_slide
+            );
+            telemetry.addData("total_distance", actual_distance);
+        }
+
+        public boolean is_done(double time) {
+            if (target_distance < 0) {
+                if (actual_distance <= target_distance) {
+                    return true;
+                }
+            } else {
+                if (actual_distance >= target_distance) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
     public class TurnAction extends Action {
         public double stick_x = 0.0;
         public double stick_y = 0.0;
@@ -390,6 +475,9 @@ public class LinearKiwiAutonomous extends LinearOpMode {
         //
         // setup
         //
+
+        dashboard = FtcDashboard.getInstance();
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         telemetry.addData("status", "startup");
         telemetry.update();

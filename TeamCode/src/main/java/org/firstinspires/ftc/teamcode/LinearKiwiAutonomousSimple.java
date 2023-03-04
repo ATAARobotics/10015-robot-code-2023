@@ -64,16 +64,19 @@ public class LinearKiwiAutonomousSimple extends LinearKiwiAutonomous {
     // to traverse "one tile" is XXX seconds? 2.5?
 
     public void add_todo_list_post_detection(List<Action> todo, double field_factor, int code_number) {
-        todo.add(new DriveAction(-0.5, 0, 0.0, 2.30 * field_factor)); // west
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 2.80 * field_factor)); // north
+        todo.add(new DriveAction(-0.5, 0, 0.0, 2.40 * field_factor)); // west
+
+        // XXX 94.0cm is what we need for the strafe distance
+        todo.add(new DriveDistanceAction(0.0, -0.5, -90, -920.0)); // north 93.5cm
+
         todo.add(new ElevatorAction(1700, 0.15)); //go to high position
-        todo.add(new DriveAction(-0.5, 0, 0.0, 0.42 * field_factor)); // west
+        todo.add(new DriveAction(-0.5, 0, 0.0, 0.75 * field_factor)); // west
         todo.add(new ElevatorAction(1460, 0.05)); // down a little
         todo.add(new ClawAction()); //open
-        todo.add(new DriveAction(0.5, 0, 0.0, 0.5 * field_factor)); // east
+        todo.add(new DriveAction(0.5, 0, 0.0, 0.75 * field_factor)); // east
         todo.add(new SlowElevatorDownAction(400)); //go to drive position
-        todo.add(new DriveAction(0.0, -0.5, 0.0, 1.0 * field_factor)); // north
 
+        todo.add(new DriveDistanceAction(0.0, -0.5, -90, -250.0)); // north 93.5cm
 
         /*
 
@@ -90,7 +93,7 @@ public class LinearKiwiAutonomousSimple extends LinearKiwiAutonomous {
 
         if (code_number == 1) {
             // already there
-            todo.add(new DriveAction(0.5, 0.0, 0.0, 0.4 * field_factor));
+            //todo.add(new DriveAction(0.5, 0.0, 0.0, 0.4 * field_factor));
         } else if (code_number == 3) {
             //todo.add(new DriveAction(0.8, 0.0, 0.0, 3.8 * field_factor));
             // turbo?
