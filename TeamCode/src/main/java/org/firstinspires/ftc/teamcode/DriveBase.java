@@ -95,10 +95,18 @@ public class DriveBase extends Object {
         motor_right.setRunMode(Motor.RunMode.VelocityControl);
         motor_slide.setRunMode(Motor.RunMode.VelocityControl);
 
-        // tuned; looks good, needs testing with auto etc
-        motor_left.setVeloCoefficients( 0.9, 0.09, 0.0);
-        motor_right.setVeloCoefficients(0.9, 0.09, 0.0);
-        motor_slide.setVeloCoefficients(0.9, 0.09, 0.0);
+        if (false) {
+            motor_left.setBuffer(1.0);
+            motor_right.setBuffer(1.0);
+            motor_slide.setBuffer(1.0);
+
+            // tuned; looks good, needs testing with auto etc
+            motor_left.setVeloCoefficients( 0.9, 0.09, 0.0);
+            motor_right.setVeloCoefficients(0.9, 0.09, 0.0);
+            motor_slide.setVeloCoefficients(0.9, 0.09, 0.0);
+            // XXX actually, it kind of "spins" the wheels at
+            // startup... .9 too aggressive?
+        }
 
         motor_left.setInverted(false);
         motor_right.setInverted(false);
