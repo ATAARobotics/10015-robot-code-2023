@@ -91,21 +91,28 @@ public class DriveBase extends Object {
         motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_slide.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
-        motor_left.setRunMode(Motor.RunMode.VelocityControl);
-        motor_right.setRunMode(Motor.RunMode.VelocityControl);
-        motor_slide.setRunMode(Motor.RunMode.VelocityControl);
-
         if (false) {
+            motor_left.setRunMode(Motor.RunMode.RawPower);
+            motor_right.setRunMode(Motor.RunMode.RawPower);
+            motor_slide.setRunMode(Motor.RunMode.RawPower);
+        } else {
+            motor_left.setRunMode(Motor.RunMode.VelocityControl);
+            motor_right.setRunMode(Motor.RunMode.VelocityControl);
+            motor_slide.setRunMode(Motor.RunMode.VelocityControl);
+
             motor_left.setBuffer(1.0);
             motor_right.setBuffer(1.0);
             motor_slide.setBuffer(1.0);
 
             // tuned; looks good, needs testing with auto etc
-            motor_left.setVeloCoefficients( 0.9, 0.09, 0.0);
-            motor_right.setVeloCoefficients(0.9, 0.09, 0.0);
-            motor_slide.setVeloCoefficients(0.9, 0.09, 0.0);
+            motor_left.setVeloCoefficients( 0.65, 0.09, 0.0);
+            motor_right.setVeloCoefficients(0.65, 0.09, 0.0);
+            motor_slide.setVeloCoefficients(0.65, 0.09, 0.0);
             // XXX actually, it kind of "spins" the wheels at
             // startup... .9 too aggressive?
+            //
+            // (although it "kind of" spins the wheels always? even
+            // without this?)
         }
 
         motor_left.setInverted(false);
@@ -144,19 +151,19 @@ public class DriveBase extends Object {
         telemetry.addData("mode", mode);
 
         // speed controls (percentage of max)
-        double max_speed = 0.45;
+        double max_speed = 0.50;
         if (gamepadex.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
             slow = !slow;
         }
         if (slow == true) {
-            max_speed = 0.30;
+            max_speed = 0.35;
         }
         if (slow_override) {
-            max_speed = 0.30;
+            max_speed = 0.35;
         }
         else if (gamepadex.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.5){
             // if ONLY right-trigger "pressed"
-            max_speed = 0.65;
+            max_speed = 0.70;
         }
         drive.setMaxSpeed(max_speed);
         telemetry.addData("max_speed", max_speed);

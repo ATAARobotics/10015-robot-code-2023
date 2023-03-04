@@ -148,6 +148,10 @@ public class KiwiDrive extends OpMode {
         telemetry.addData("vel_right", vel_right);
         telemetry.addData("vel_slide", vel_slide);
 
+        telemetry.addData("enc_left", last_left);
+        telemetry.addData("enc_right", last_right);
+        telemetry.addData("enc_slide", last_slide);
+
         // for the FTC dashboard
         telemetry.addData(
             "left",
@@ -163,7 +167,7 @@ public class KiwiDrive extends OpMode {
         );
 
         // can draw, if we have dead-reckoning code again
-        TelemetryPacket p = new TelemetryPacket();
+        // TelemetryPacket p = new TelemetryPacket();
         // we Strongly Suspect the field is in "inches" in the dashboard... hence "25.4"
         // p.fieldOverlay()
         //     .setStrokeWidth(1)
