@@ -57,13 +57,17 @@ public class Elevator extends Object {
     private int hold_at_position = 0;
 
     public Elevator(HardwareMap hardwareMap) {
+        // parameters about our motors (ftplib has gobilda built-in, not rev)
+        double ticks_per_rev = 294.0;
+        double max_rpm = 505.0;
+
         // initialize motors
-        motor_elevator = new Motor(hardwareMap, "hdelevator");
+        motor_elevator = new Motor(hardwareMap, "hdelevator", ticks_per_rev, max_rpm);
         motor_elevator.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         motor_elevator.setRunMode(Motor.RunMode.PositionControl);
         motor_elevator.setInverted(true); // so that "up" is positive for us
         motor_elevator.set(0);
-        motor_elevator.setPositionCoefficient(0.02);
+        motor_elevator.setPositionCoefficient(0.015);
 
         // elevator / claw motors
         servo_claw_left = hardwareMap.get(Servo.class, "hdclawleft");

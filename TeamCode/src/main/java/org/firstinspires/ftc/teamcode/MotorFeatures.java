@@ -47,12 +47,11 @@ import org.firstinspires.ftc.teamcode.DriveBase;
 import org.firstinspires.ftc.teamcode.Elevator;
 
 
-@Autonomous(name="Motor Tests", group="Autonomous")
-public class MotorTests extends LinearOpMode {
+@Autonomous(name="Motor Features", group="Autonomous")
+public class MotorFeatures extends LinearOpMode {
 
     private DriveBase drivebase = null;
     private Elevator elevator = null;
-    private GamepadEx gamepadex1 = null;
 
     private void ensure_stop(double heading) {
         /// ideally shouldn't need this, but .. here we are
@@ -120,16 +119,12 @@ public class MotorTests extends LinearOpMode {
         // elevator setup
         elevator = new Elevator(hardwareMap);
 
-        // just one controller
-        gamepadex1 = new GamepadEx(gamepad1);
-
         drivebase.motor_left.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         drivebase.motor_right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         drivebase.motor_slide.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         drivebase.motor_left.resetEncoder();
         drivebase.motor_right.resetEncoder();
         drivebase.motor_slide.resetEncoder();
-
 
         telemetry.addData("status", "initialized");
         telemetry.update();
@@ -155,31 +150,46 @@ public class MotorTests extends LinearOpMode {
         elevator.motor_elevator.setRunMode(Motor.RunMode.PositionControl);
 
         double heading = 0.0;
-        double left_start = 0.0;
-        double right_start = 0.0;
-        double slide_start = 0.0;
+        double left_start = time;
+        double right_start = time;
+        double slide_start = time;
+
+        drivebase.motor_left.setRunMode(Motor.RunMode.RawPower);
+        drivebase.motor_right.setRunMode(Motor.RunMode.RawPower);
+        drivebase.motor_slide.setRunMode(Motor.RunMode.RawPower);
+
+        // different motors achieving different speeds here
+        // sometimes jumping to huge number...
+        // left 2540
+
+        double start_ticks = 0;
+        double start_time = 0;
+        boolean started = false;
+
+        // okay, looks like left achieves 505 rpms
+        // (540 with only one motor)
+        // 2660 or 2640 from encoder.getRawVelocity()... (with one motor only)
 
         while (opModeIsActive()) {
-            gamepadex1.readButtons();
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            // approach full power in 3 seconds
+            drivebase.motor_left.set(Math.min(1.0, (time - left_start) / 3.0));
+            /*
+            drivebase.motor_right.set(Math.min(1.0, (time - right_start) / 3.0));
+            drivebase.motor_slide.set(Math.min(1.0, (time - slide_start) / 3.0));
+            */
 
-            if (gamepadex1.wasJustPressed(GamepadKeys.Button.A)) {
-                drivebase.motor_left.setPositionCoefficient(0.02);
-                drivebase.motor_left.setRunMode(Motor.RunMode.PositionControl);
-                drivebase.motor_right.setPositionCoefficient(0.02);
-                drivebase.motor_right.setRunMode(Motor.RunMode.PositionControl);
-                // should be 30cm forward
-                drivebase.motor_left.setTargetPosition(274);
-                drivebase.motor_right.setTargetPosition(-274);
+            if (time > 4.0 && !started) {
+                started = true;
+                start_time = time;
+                start_ticks = drivebase.motor_left.encoder.getPosition();
             }
 
-            if (gamepadex1.isDown(GamepadKeys.Button.A)) {
-                if (!drivebase.motor_left.atTargetPosition()) {
-                    drivebase.motor_left.set(0.15);
-                }
-                if (!drivebase.motor_right.atTargetPosition()) {
-                    drivebase.motor_right.set(0.15);
-                }
+            double left_rpm = 0.0;
+
+            if (started && time > left_start) {
+                double ticks = drivebase.motor_left.encoder.getPosition() - start_ticks;
+                left_rpm = (ticks / 294.0) / ((time - start_time) / 60.0);
             }
 
             telemetry.addData("time", time);
@@ -187,9 +197,10 @@ public class MotorTests extends LinearOpMode {
             telemetry.addData(
                 "left",
                 String.format(
-                    "position=%.2f encoder=%d",
-                    drivebase.motor_left.getCorrectedVelocity(),
-                    drivebase.motor_left.encoder.getPosition()
+                    "position=%.2f encoder=%d rpm=%.2f",
+                    drivebase.motor_left.encoder.getRawVelocity(),
+                    drivebase.motor_left.encoder.getPosition(),
+                    left_rpm
                 )
             );
             telemetry.addData(

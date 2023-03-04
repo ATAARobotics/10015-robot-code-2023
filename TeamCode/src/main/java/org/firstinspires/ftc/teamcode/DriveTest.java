@@ -4,6 +4,7 @@ import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.ToggleButtonReader;
 import com.arcrobotics.ftclib.gamepad.TriggerReader;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -46,39 +47,25 @@ import org.firstinspires.ftc.teamcode.Elevator;
 import java.util.ArrayList;
 
 
-@TeleOp(name="Kiwi: TeleOp", group="Opmode")
-public class KiwiDrive extends OpMode {
+@Autonomous(name="Drive Test", group="Opmode")
+public class DriveTest extends OpMode {
 
     private DriveBase drivebase = null;
     private Elevator elevator = null;
 
-    private GamepadEx gamepadex1 = null;
-    private GamepadEx gamepadex2 = null;
-
     // time-tracking
     private double last_time = 0.0;
-
-    private FtcDashboard dashboard;
-
-    // our own velocity tracking
-    private double last_left = 0;
-    private double last_right = 0;
-    private double last_slide = 0;
+    ArrayList<Double> times = new ArrayList<>();
 
     private FtcDashboard dashboard;
 
     @Override
     public void init() {
-        // override the dashboard with FTC dashboard
         dashboard = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         telemetry.addData("status", "startup");
         telemetry.update();
-
-        // setup some controller listeners
-        gamepadex1 = new GamepadEx(gamepad1);
-        gamepadex2 = new GamepadEx(gamepad2);
 
         // let the drivebase set itself up
         drivebase = new DriveBase(hardwareMap);
@@ -95,6 +82,9 @@ public class KiwiDrive extends OpMode {
     public void init_loop() {
         // Executed repeatedly after a user presses INIT but before a
         // user presses Play (▶) on the Driver Station
+        telemetry.addData("vel_left", drivebase.motor_left.encoder.getRawVelocity());
+        telemetry.addData("vel_right", drivebase.motor_right.encoder.getRawVelocity());
+        telemetry.addData("vel_slide", drivebase.motor_slide.encoder.getRawVelocity());
     }
 
     @Override
@@ -102,18 +92,11 @@ public class KiwiDrive extends OpMode {
         // Executed once immediately after a user presses Play (▶) on
         // the Driver Station
 
-        // XXX VITAL: for competition, the AUTONOMOUS mode code will do these
-        // reset calls -- DO NOT do them again here...
-
-        // but for practice, we leave it alone..
-
-        if (gamepadex1.isDown(GamepadKeys.Button.A) || gamepadex1.isDown(GamepadKeys.Button.X)) {
-            // make sure robot starts at correct position
-            drivebase.imu.resetYaw();
-            // ensure we have "zero" at the bottom of our elevator
-            elevator.motor_elevator.resetEncoder();
-            drivebase.dead.reset();
-        }
+        // make sure robot starts at correct position
+        drivebase.imu.resetYaw();
+        // ensure we have "zero" at the bottom of our elevator
+        elevator.motor_elevator.resetEncoder();
+        drivebase.dead.reset();
     }
 
     @Override
@@ -122,63 +105,68 @@ public class KiwiDrive extends OpMode {
         // before a user presses Stop (◼) on the Driver Station
 
         double diff = time - last_time;
-        last_time = time;
 
-        // let FTCLib updates its button status
-        // VERY IMPORTANT: only do this _once_ per loop (e.g. not in
-        // do_drive_updates()) because otherwise the notion of
-        // "wasJustPressed" is wrong
-        gamepadex1.readButtons();
-        gamepadex2.readButtons();
-
-        // tie controllers through to components
-        boolean slow_override = false;
-
-        //toggle the slow overide
-        if (elevator.motor_elevator.getCurrentPosition() > 800) {
-            slow_override = true;
+        // running-average of our cycle-time
+        times.add(new Double(diff));
+        if (times.size() > 5) {
+            times.remove(0);
         }
-        drivebase.do_drive_updates(gamepadex1, telemetry, slow_override);
-        elevator.do_elevator_updates(gamepadex2, telemetry);
+        double avg_diff = 0.0;
+        for (Double d : times) {
+            avg_diff += d;
+        }
+        avg_diff = avg_diff / times.size();
+        last_time = time;
+        telemetry.addData("time", time);
 
-        // our own velocity tracking
-        double vel_left = (drivebase.motor_left.encoder.getPosition() - last_left) / diff;
-        double vel_right = (drivebase.motor_right.encoder.getPosition() - last_right) / diff;
-        double vel_slide = (drivebase.motor_slide.encoder.getPosition() - last_slide) / diff;
-        last_left = drivebase.motor_left.encoder.getPosition();
-        last_right = drivebase.motor_right.encoder.getPosition();
-        last_slide = drivebase.motor_slide.encoder.getPosition();
-        telemetry.addData("vel_left", vel_left);
-        telemetry.addData("vel_right", vel_right);
-        telemetry.addData("vel_slide", vel_slide);
+        double heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        telemetry.addData("heading", heading);
+        drivebase.dead.update(drivebase, telemetry);
 
-        telemetry.addData("enc_left", last_left);
-        telemetry.addData("enc_right", last_right);
-        telemetry.addData("enc_slide", last_slide);
+        if (time >= 15.0 && time < 17.0) {
+            drivebase.drive.driveFieldCentric(0, -1.0, 0, heading);
+        } else {
+            drivebase.drive.driveFieldCentric(0, 0, 0, heading);
+        }
 
         // for the FTC dashboard
         telemetry.addData(
-            "vel_raw_left",
+            "left",
             drivebase.motor_left.encoder.getRawVelocity()
         );
         telemetry.addData(
-            "vel_raw_right",
+            "right",
             drivebase.motor_right.encoder.getRawVelocity()
         );
         telemetry.addData(
-            "vel_raw_slide",
+            "slide",
             drivebase.motor_slide.encoder.getRawVelocity()
         );
 
-        // can draw, if we have dead-reckoning code again
-        // TelemetryPacket p = new TelemetryPacket();
+        TelemetryPacket p = new TelemetryPacket();
         // we Strongly Suspect the field is in "inches" in the dashboard... hence "25.4"
-        // p.fieldOverlay()
-        //     .setStrokeWidth(1)
-        //     .setStroke("red")
-        //     .setFill("black")
-        //     .fillCircle(drivebase.dead.pos_x / 25.4, drivebase.dead.pos_y / 25.4, 5);
-        // dashboard.sendTelemetryPacket(p);
+        //
+        double mm_per_tick = (2.0 * Math.PI * 43) / 294.0;
+        p.fieldOverlay()
+            .setStrokeWidth(1)
+            .setStroke("red")
+            .setFill("black")
+            .fillCircle((drivebase.dead.pos_x * mm_per_tick) / 25.4, (drivebase.dead.pos_y * mm_per_tick) / 25.4, 5);
+        dashboard.sendTelemetryPacket(p);
+
+        // raw encoders
+        telemetry.addData("encoder_left", drivebase.motor_left.encoder.getPosition());
+        telemetry.addData("encoder_right", drivebase.motor_right.encoder.getPosition());
+        telemetry.addData("encoder_slide", drivebase.motor_slide.encoder.getPosition());
+
+        // max when doing -1.0 input to drive forward seems to be about 600
+        // so actual-max should be bigger?
+        telemetry.addData("vel_left", drivebase.motor_left.encoder.getRawVelocity());
+        telemetry.addData("vel_right", drivebase.motor_right.encoder.getRawVelocity());
+        telemetry.addData("vel_slide", drivebase.motor_slide.encoder.getRawVelocity());
+
+        telemetry.addData("diff", diff);
+        telemetry.addData("diff_avg", avg_diff);
 
         telemetry.update();
     }
