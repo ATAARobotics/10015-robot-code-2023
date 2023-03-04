@@ -65,7 +65,6 @@ public class KiwiDrive extends OpMode {
     private double last_right = 0;
     private double last_slide = 0;
 
-    private FtcDashboard dashboard;
 
     @Override
     public void init() {
