@@ -53,3 +53,11 @@ print(math.sin(math.radians(avg_head)))
 
 x = math.cos(math.radians(avg_head)) * mm_per_tick * avg
 print("x", x)
+
+# measure: 102cm
+# detect: travel_avg: 1186.7055957997459
+
+#print("ZZZ", ((1173 * mm_per_tick) / math.sin(math.radians(60))))
+print("ZZZ", ((1473.0 * mm_per_tick) / math.sin(math.radians(60))))
+print("ZZZ", (((1483.0 + 1347) / 2.0 * mm_per_tick) / math.sin(math.radians(60))))
+print("ZZZ", (1483.0 * mm_per_tick) / math.sin(math.radians(60)))

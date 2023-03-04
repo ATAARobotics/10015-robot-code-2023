@@ -133,8 +133,7 @@ public class DeadReckon extends Object {
 
         // caliper says 87.5mm diameter, measured 294 ticks/rev
         // (could do ticks/rev at higher rev count than 1?)
-        //double mm_per_tick = (Math.PI * 87.5) / 294.0;
-        double mm_per_tick = (Math.PI * 90.0) / 294.0;
+        double mm_per_tick = (Math.PI * 87.5) / 294.0;
         double distance = ticks * mm_per_tick;
 
         // okay, so now we know that we've moved "distance" along the

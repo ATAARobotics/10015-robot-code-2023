@@ -115,14 +115,13 @@ public class Wreck extends LinearOpMode {
 
         // make sure robot starts at correct position
         drivebase.imu.resetYaw();
-        drivebase.reset();
 
         // wait 5 seconds
         sleep(5000);
 
         double heading;
         double start = time;
-        double stick_y = -0.8;
+        double stick_y = -0.5;
 
         List<Double> headings = new ArrayList<Double>();
         double start_left;
@@ -139,11 +138,14 @@ public class Wreck extends LinearOpMode {
         int heading_count = 0;
 
         double total_distance = 0.0;
+        drivebase.reset();
 
         while (opModeIsActive()) {
             heading = - drivebase.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             accum_heading += heading;
             heading_count += 1;
+
+            // looks like we're out by 5% on longer drives?
 
             // average over 4 "ticks"
             if (heading_count > 4) {
@@ -160,7 +162,7 @@ public class Wreck extends LinearOpMode {
                 telemetry.addData("enc_right", drivebase.motor_right.encoder.getPosition());
                 telemetry.addData("enc_slide", drivebase.motor_slide.encoder.getPosition());
                 //if (total_distance < 300.0 && time - start <= 2.0) {
-                if (time - start <= 2.0) {
+                if (time - start <= 4.0) {
                     headings.add(heading);
                     total_distance = distanceTravelled(
                         headings,
@@ -194,8 +196,11 @@ public class Wreck extends LinearOpMode {
         telemetry.addData("travel_right", right_distance);
         telemetry.addData("travel_slide", slide_distance);
 
-        double dist = (left_distance + right_distance) / 2.0;
+        double dist = Math.min(left_distance, right_distance);
         telemetry.addData("travel_avg", dist);
+
+        double travel_no_slide = (((left + slide)  + (right + slide) / 2.0) * mm_per_tick) / Math.sin(Math.toRadians(30));
+        telemetry.addData("travel_no_slide", travel_no_slide);
 
         double dx = dist * Math.cos(Math.toRadians(avg_head));
         double dy = dist * Math.sin(Math.toRadians(avg_head));
