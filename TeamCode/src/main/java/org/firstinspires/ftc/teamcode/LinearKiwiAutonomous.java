@@ -265,6 +265,38 @@ public class LinearKiwiAutonomous extends LinearOpMode {
     }
 
 
+    public class DriveHeadingAction extends Action {
+        public double stick_x = 0.0;
+        public double stick_y = 0.0;
+        public double duration = 0.0;
+        public double target_heading = 0.0;
+        public PIDController heading_control = null;
+        //List<Double> headings = null;
+
+        public DriveHeadingAction(double x, double y, double dur, double th) {
+            stick_x = x;
+            stick_y = y;
+            duration = dur;
+            target_heading = th;
+            //headings = new ArrayList<Double>();
+            heading_control = new PIDController(0.005, 0.0001, 0.0);
+        }
+
+        public void do_drive(double heading, DriveBase drivebase) {
+            //headings.add(heading);
+            double turn = heading_control.calculate(heading, target_heading);
+            drivebase.drive.driveFieldCentric(stick_x, stick_y, turn, heading);
+        }
+
+        public boolean is_done(double time) {
+            if ((time - start_time) > duration) {
+                return true;
+            }
+            return false;
+        }
+    }
+
+
     public class DriveDistanceAction extends Action {
         public double stick_x = 0.0;
         public double stick_y = 0.0;
@@ -342,6 +374,7 @@ public class LinearKiwiAutonomous extends LinearOpMode {
             return false;
         }
     }
+
 
     public class TurnAction extends Action {
         public double stick_x = 0.0;
